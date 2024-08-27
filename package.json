@@ -1,5 +1,5 @@
 {
-  "name": "construct3-videoplayer-addon-2",
+  "name": "construct3-videoplayer-addon2",
   "version": "1.0.0",
   "description": "Construct 3 video player add-on",
   "main": "index.js",
@@ -7,21 +7,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "http-server ./src -p 8080 --cors -c-1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@bitbucket.org/genvidtech/construct3-videoplayer-addon-2.git"
-  },
-  "keywords": [
-    "Construct3",
-    "videoplayer",
-    "addon"
-  ],
-  "author": "Yuka Kudo",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://bitbucket.org/genvidtech/construct3-videoplayer-addon-2/issues"
-  },
-  "homepage": "https://bitbucket.org/genvidtech/construct3-videoplayer-addon-2#readme",
   "devDependencies": {
     "@types/node": "^22.5.0",
     "http-server": "^14.1.1"
