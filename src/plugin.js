@@ -8,13 +8,13 @@ const SDK = self.SDK;
 // Only the plugin name is displayed in the editor, so to rename your plugin change the name but NOT the ID.
 // If you want to completely replace a plugin, make it deprecated (it will be hidden but old projects keep working),
 // and create an entirely new plugin with a different plugin ID.
-const PLUGIN_ID = "Genvidtech_VideoPlayerPlugin2";
+const PLUGIN_ID = "Genvidtech_GCoreVideoPlugin";
 ////////////////////////////////////////////
 
 const PLUGIN_VERSION = "1.0.0.0";
-const PLUGIN_CATEGORY = "general";
+const PLUGIN_CATEGORY = "media";
 
-const PLUGIN_CLASS = SDK.Plugins.Genvidtech_VideoPlayerPlugin2 = class MyDrawingPlugin extends SDK.IPluginBase
+const PLUGIN_CLASS = SDK.Plugins.Genvidtech_GCoreVideoPlugin = class GCoreVideoPlugin extends SDK.IPluginBase
 {
 	constructor()
 	{

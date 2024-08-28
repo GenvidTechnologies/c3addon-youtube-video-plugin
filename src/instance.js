@@ -1,9 +1,9 @@
 
 const SDK = self.SDK;
 
-const PLUGIN_CLASS = SDK.Plugins.Genvidtech_VideoPlayerPlugin2;
+const PLUGIN_CLASS = SDK.Plugins.Genvidtech_GCoreVideoPlugin;
 
-PLUGIN_CLASS.Instance = class MyDOMInstance extends SDK.IInstanceBase
+PLUGIN_CLASS.Instance = class GCoreVideoInstance extends SDK.IInstanceBase
 {
 	constructor(sdkType, inst)
 	{

@@ -16,14 +16,14 @@
 	
 	// NOTE: use a unique DOM component ID to ensure it doesn't clash with anything else
 	// This must also match the ID in instance.js and plugin.js.
-	const DOM_COMPONENT_ID = "genvidtech-videoplayerplugin2";
+	const DOM_COMPONENT_ID = "genvidtech-gcorevideoplugin";
 
 	function StopPropagation(e)
 	{
 		e.stopPropagation();
 	}
 
-	const HANDLER_CLASS = class MyDOMHandler extends self.DOMHandler
+	const HANDLER_CLASS = class GCoreVideoDOMHandler extends self.DOMHandler
 	{
 		constructor(iRuntime)
 		{

@@ -1,7 +1,7 @@
 ﻿{
 	"$schema": "../SDK/plugin-sdk/v1/aces.schema.json",
 	
-	"button": {
+	"media": {
 		"conditions": [
 			{
 				"id": "on-click",

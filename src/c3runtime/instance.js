@@ -2,9 +2,9 @@ const C3 = self.C3;
 
 // NOTE: use a unique DOM component ID to ensure it doesn't clash with anything else.
 // This must also match the ID in plugin.js and domSide.js.
-const DOM_COMPONENT_ID = "genvidtech-videoplayerplugin2";
+const DOM_COMPONENT_ID = "genvidtech-gcorevideoplugin";
 
-C3.Plugins.Genvidtech_VideoPlayerPlugin2.Instance = class MyDOMInstance extends C3.SDKInstanceBase
+C3.Plugins.Genvidtech_GCoreVideoPlugin.Instance = class GCoreVideoInstance extends C3.SDKInstanceBase
 {
 	constructor(inst, properties)
 	{
@@ -74,7 +74,7 @@ C3.Plugins.Genvidtech_VideoPlayerPlugin2.Instance = class MyDOMInstance extends 
 
 	GetScriptInterfaceClass()
 	{
-		return self.IMyDOMInstance;
+		return self.IGCoreVideoInstance;
 	}
 };
 
@@ -82,7 +82,7 @@ C3.Plugins.Genvidtech_VideoPlayerPlugin2.Instance = class MyDOMInstance extends 
 // caller using the script interface.
 const map = new WeakMap();
 
-self.IMyDOMInstance = class IMyDOMInstance extends self.IInstance {
+self.IGCoreVideoInstance = class IGCoreVideoInstance extends self.IInstance {
 	constructor()
 	{
 		super();

@@ -13,7 +13,7 @@
 			"actions": [
 				{
 					"id": "play",
-					"objectClass": "MyDOM",
+					"objectClass": "VideoPlayer",
 					"sid": 948880516590090
 				}
 			],
@@ -31,7 +31,7 @@
 			"actions": [
 				{
 					"id": "pause",
-					"objectClass": "MyDOM",
+					"objectClass": "VideoPlayer",
 					"sid": 815251448354960
 				}
 			],
@@ -63,7 +63,7 @@
 			"conditions": [
 				{
 					"id": "is-playing",
-					"objectClass": "MyDOM",
+					"objectClass": "VideoPlayer",
 					"sid": 909573857010186
 				},
 				{
@@ -89,7 +89,7 @@
 			"conditions": [
 				{
 					"id": "is-paused",
-					"objectClass": "MyDOM",
+					"objectClass": "VideoPlayer",
 					"sid": 306948074379479
 				},
 				{
@@ -164,7 +164,7 @@
 			"actions": [
 				{
 					"id": "load",
-					"objectClass": "MyDOM",
+					"objectClass": "VideoPlayer",
 					"sid": 479121990389559
 				}
 			],

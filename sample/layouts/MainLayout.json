@@ -271,7 +271,7 @@
 	"sid": 232285377964416,
 	"nonworld-instances": [
 		{
-			"type": "MyDOM",
+			"type": "VideoPlayer",
 			"properties": {},
 			"uid": 4,
 			"instanceVariables": {}

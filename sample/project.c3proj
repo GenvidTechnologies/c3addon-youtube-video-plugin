@@ -15,8 +15,8 @@
 		},
 		{
 			"type": "plugin",
-			"id": "Genvidtech_VideoPlayerPlugin2",
-			"name": "MyDOM",
+			"id": "Genvidtech_GCoreVideoPlugin",
+			"name": "GCore Video Plugin",
 			"author": "Genvid Technologies LLC",
 			"bundled": false,
 			"version": "1.0.0.0"
@@ -46,7 +46,7 @@
 			"PauseButton",
 			"LoadVideo2Button",
 			"LoadVideo1Button",
-			"MyDOM",
+			"VideoPlayer",
 			"iframe2"
 		],
 		"subfolders": []

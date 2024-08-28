@@ -1,9 +1,9 @@
 
 const SDK = self.SDK;
 
-const PLUGIN_CLASS = SDK.Plugins.Genvidtech_VideoPlayerPlugin2;
+const PLUGIN_CLASS = SDK.Plugins.Genvidtech_GCoreVideoPlugin;
 
-PLUGIN_CLASS.Type = class MyDOMPluginType extends SDK.ITypeBase
+PLUGIN_CLASS.Type = class GCoreVideoPluginType extends SDK.ITypeBase
 {
 	constructor(sdkPlugin, iObjectType)
 	{

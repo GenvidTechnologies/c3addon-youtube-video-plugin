@@ -1,6 +1,6 @@
 const C3 = self.C3;
 
-C3.Plugins.Genvidtech_VideoPlayerPlugin2.Type = class MyDOMType extends C3.SDKTypeBase
+C3.Plugins.Genvidtech_GCoreVideoPlugin.Type = class GCoreVideoType extends C3.SDKTypeBase
 {
 	constructor(objectClass)
 	{

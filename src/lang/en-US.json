@@ -2,17 +2,17 @@
 	"$schema": "../../SDK/plugin-sdk/v1/plugin.lang.schema.json",
 
 	"languageTag": "en-US",
-	"fileDescription": "Strings for Genvidtech_VideoPlayerPlugin2.",
+	"fileDescription": "Strings for Genvidtech_GCoreVideoPlugin.",
 	"text": {
 		"plugins": {
-			"genvidtech_videoplayerplugin2": {
-				"name": "MyDOM",
-				"description": "Testing a custom DOM element third-party plugin.",
-				"help-url": "https://www.construct.net",
+			"genvidtech_gcorevideoplugin": {
+				"name": "GCore Video Plugin",
+				"description": "GCore Video Plugin integration by Genvid Technologies",
+				"help-url": "https://bitbucket.org/genvidtech/c3addon-gcore-video-plugin",
 				"properties": {
 				},
 				"aceCategories": {
-					"button": "Button"
+					"media": "Media"
 				},
 				"conditions": {
 					"on-click": {

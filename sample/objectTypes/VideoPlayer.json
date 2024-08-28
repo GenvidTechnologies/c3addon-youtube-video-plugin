@@ -1,6 +1,6 @@
 {
-	"name": "MyDOM",
-	"plugin-id": "Genvidtech_VideoPlayerPlugin2",
+	"name": "VideoPlayer",
+	"plugin-id": "Genvidtech_GCoreVideoPlugin",
 	"sid": 654619375241237,
 	"isGlobal": true,
 	"instanceVariables": []
