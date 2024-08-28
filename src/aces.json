@@ -1,5 +1,5 @@
 ﻿{
-	"$schema": "../aces.schema.json",
+	"$schema": "../SDK/plugin-sdk/v1/aces.schema.json",
 	
 	"button": {
 		"conditions": [
