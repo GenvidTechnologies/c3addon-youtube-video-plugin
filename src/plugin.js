@@ -34,10 +34,6 @@ const PLUGIN_CLASS = SDK.Plugins.Genvidtech_GCoreVideoPlugin = class GCoreVideoP
 		// Load domSide.js in the document context (main thread).
 		// This is important for supporting the runtime's web worker mode.
 		this._info.SetDOMSideScripts(["c3runtime/domSide.js"]);
-		
-		SDK.Lang.PushContext(".properties");
-		
-		SDK.Lang.PopContext();	
 	}
 };
 

@@ -46,10 +46,6 @@
 					console.error("[video player] GcorePlayer or gplayerAPI not found");
 				}
 
-				// Adding event listener to listen to Gcore method call event
-				// FIXME: Gcore API should have a way to handle this
-				window.addEventListener("message", this.handleGcoreMethodMessages.bind(this));
-
 				this.gplayerAPI.on("ready", () => {
 					console.log("[video player]", "Ready");
 
@@ -108,49 +104,6 @@
 			}
 		}
 
-		handleGcoreMethodMessages(event) {
-			if (event.data.method) {
-				switch (event.data.method) {
-					case "mute":
-						console.log("[video player]", "Muted");
-
-						this.PostToRuntime("state-changed", {
-							state: {
-								audioState: "muted",
-							}
-						});
-						break;
-					case "unmute":
-						console.log("[video player]", "Unmuted");
-
-						this.PostToRuntime("state-changed", {
-							state: {
-								audioState: "unmuted",
-							}
-						});
-						break;
-					case "getVolume":
-						console.log("[video player] Current volume", event.data.res);
-
-						this.PostToRuntime("state-changed", {
-							state: {
-								currentVolume: event.data.res,
-							}
-						});
-						break;
-					case "getDuration":
-						console.log("[video player] Duration", event.data.res);
-
-						this.PostToRuntime("state-changed", {
-							state: {
-								duration: event.data.res,
-							}
-						});
-						break;
-				}
-			}
-		}
-
 		UpdateState(elem, e) {
 		}
 
@@ -184,22 +137,55 @@
 
 		_OnMute() {
 			console.log("[video player]", "Mute requested");
-			this.gplayerAPI.method({ name: "mute" });
+			this.gplayerAPI.method({ name: "mute", callback: () => {
+				console.log("[video player]", "Muted");
+
+				this.PostToRuntime("state-changed", {
+					state: {
+						audioState: "muted",
+					}
+				});
+			} });
 		}
 		
 		_OnUnmute() {
 			console.log("[video player]", "Unmute requested");
-			this.gplayerAPI.method({ name: "unmute" });
+			this.gplayerAPI.method({ name: "unmute", callback: () => {
+				console.log("[video player]", "Unmuted");
+
+				this.PostToRuntime("state-changed", {
+					state: {
+						audioState: "unmuted",
+					}
+				});
+			}});
 		}
 
 		_OnGetDuration() {
 			console.log("[video player]", "Current duration requested");
-			this.gplayerAPI.method({ name: "getDuration" });
+			this.gplayerAPI.method({ name: "getDuration", callback: (res) => {
+				console.log("[video player] Duration", res);
+
+				this.PostToRuntime("state-changed", {
+					state: {
+						duration: res,
+					}
+				});
+			} });
 		}
 		
 		_OnGetVolume() {
 			console.log("[video player]", "Current volume requested");
-			this.gplayerAPI.method({ name: "getVolume" });
+			this.gplayerAPI.method({ name: "getVolume", callback: (res) => {
+				console.log("[video player] Current volume", res);
+
+				this.PostToRuntime("state-changed", {
+					state: {
+						currentVolume: res,
+					}
+				});
+
+			}});
 		}
 
 		_OnDispose() {

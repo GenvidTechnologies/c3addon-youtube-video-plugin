@@ -5,7 +5,7 @@ const C3 = self.C3;
 const DOM_COMPONENT_ID = "genvidtech-gcorevideoplugin";
 
 // NOTE: DOM plugins derive from C3.SDKDOMPluginBase, not C3.SDKPluginBase.
-C3.Plugins.Genvidtech_GCoreVideoPlugin = class GCoreVideoPlugin extends C3.SDKPluginBase
+C3.Plugins.Genvidtech_GCoreVideoPlugin = class GCoreVideoPlugin extends C3.SDKDOMPluginBase
 {
 	constructor(opts)
 	{
