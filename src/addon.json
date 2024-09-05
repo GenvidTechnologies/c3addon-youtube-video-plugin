@@ -6,7 +6,7 @@
 	"type": "plugin",
 	"name": "GCore Video",
 	"id": "Genvidtech_GCoreVideoPlugin",
-	"version": "1.0.0.0",
+	"version": "1.0.0.1",
 	"author": "Genvid Technologies, LLC",
 	"website": "https://bitbucket.org/genvidtech/c3addon-gcore-video-plugin",
 	"documentation": "https://bitbucket.org/genvidtech/c3addon-gcore-video-plugin",

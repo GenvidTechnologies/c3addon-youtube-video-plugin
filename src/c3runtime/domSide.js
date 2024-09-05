@@ -232,7 +232,7 @@
 				name: "unmute", callback: () => {
 					console.log("[video player]", "Unmuted");
 
-					this.PostToRuntime("state-changed", {
+					this._PostStateToRuntime({
 						audioState: "unmuted",
 					});
 				}

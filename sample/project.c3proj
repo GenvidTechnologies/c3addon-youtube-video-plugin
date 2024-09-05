@@ -19,7 +19,7 @@
 			"name": "GCore Video Plugin",
 			"author": "Genvid Technologies LLC",
 			"bundled": false,
-			"version": "1.0.0.0"
+			"version": "1.0.0.1"
 		},
 		{
 			"type": "plugin",
@@ -191,7 +191,7 @@
 	},
 	"properties": {
 		"description": "GCore Video Plugin Sample integration",
-		"version": "1.0.0.0",
+		"version": "1.0.0.1",
 		"author": "Genvid Technologies, LLC",
 		"authorEmail": "support@genvidtech.com",
 		"authorWebsite": "https://bitbucket.org/genvidtech/c3addon-gcore-video-plugin",
