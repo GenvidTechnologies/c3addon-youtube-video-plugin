@@ -1,6 +1,5 @@
 ﻿{
 	"$schema": "../../SDK/plugin-sdk/v1/plugin.lang.schema.json",
-
 	"languageTag": "en-US",
 	"fileDescription": "Strings for Genvidtech_GCoreVideoPlugin.",
 	"text": {
@@ -27,6 +26,11 @@
 						"list-name": "On state changed",
 						"display-text": "On state changed",
 						"description": "Triggered when the video player state has changed."
+					},
+					"on-error": {
+						"list-name": "On error",
+						"display-text": "On error",
+						"description": "Triggered when the video player encountered an error."
 					},
 					"is-playing": {
 						"list-name": "Is playing",
@@ -130,6 +134,14 @@
 					"state": {
 						"description": "The state of the video player.",
 						"translated-name": "State"
+					},
+					"get-last-error-category": {
+						"description": "The last error category.  Could be 'iframe' or 'gcore'.",
+						"translated-name": "GetLastErrorCategory"
+					},
+					"get-last-error-message": {
+						"description": "The last error message.  Can depend on platform, etc.",
+						"translated-name": "GetLastErrorMessage"
 					},
 					"get-current-playback-time": {
 						"description": "The current playback time of the video player.",

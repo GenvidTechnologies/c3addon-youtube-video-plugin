@@ -71,7 +71,9 @@
 			"PlaybackTimeTextHeader",
 			"VolumeTextHeader",
 			"DurationTextHeader",
-			"GCoreVideoPlugin"
+			"GCoreVideoPlugin",
+			"ErrorTextHeader",
+			"ErrorText"
 		],
 		"subfolders": []
 	},

@@ -264,6 +264,27 @@
 						}
 					],
 					"sid": 344835701023923
+				},
+				{
+					"eventType": "block",
+					"conditions": [
+						{
+							"id": "on-error",
+							"objectClass": "VideoPlayer",
+							"sid": 101510492301673
+						}
+					],
+					"actions": [
+						{
+							"id": "set-text",
+							"objectClass": "ErrorText",
+							"sid": 941407338009224,
+							"parameters": {
+								"text": "StringSub(\"{0}: {1}\", VideoPlayer.GetLastErrorCategory, VideoPlayer.GetLastErrorMessage)"
+							}
+						}
+					],
+					"sid": 722610739347360
 				}
 			],
 			"sid": 787197576674853

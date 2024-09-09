@@ -8,6 +8,11 @@
 				"isTrigger": true
 			},
 			{
+				"id": "on-error",
+				"scriptName": "OnError",
+				"isTrigger": true
+			},
+			{
 				"id": "is-playing",
 				"scriptName": "IsPlaying"
 			},
@@ -91,12 +96,21 @@
 					}
 				]
 			}
-
 		],
 		"expressions": [
 			{
 				"id": "state",
 				"expressionName": "State",
+				"returnType": "string"
+			},
+			{
+				"id": "get-last-error-message",
+				"expressionName": "GetLastErrorMessage",
+				"returnType": "string"
+			},
+			{
+				"id": "get-last-error-category",
+				"expressionName": "GetLastErrorCategory",
 				"returnType": "string"
 			},
 			{

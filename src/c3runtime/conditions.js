@@ -5,6 +5,9 @@ C3.Plugins.Genvidtech_GCoreVideoPlugin.Cnds =
 	OnStateChanged() {
 		return true;
 	},
+	OnError() {
+		return true;
+	},
 	IsPlaying() {
 		return this._isPlaying;
 	},

@@ -50,6 +50,10 @@ C3.Plugins.Genvidtech_GCoreVideoPlugin.Instance = class GCoreVideoInstance exten
 		this._playerState = "loading";
 		this._audioState = "ready";
 
+		this._lastError = {
+			category: "",
+			message: ""
+		};
 	}
 
 	_OnStateChanged(e) {
@@ -130,10 +134,19 @@ C3.Plugins.Genvidtech_GCoreVideoPlugin.Instance = class GCoreVideoInstance exten
 			audioState: this._audioState,
 			currentVolume: this._currentVolume,
 			duration: this._duration,
-			currentPlaybackTime: this._currentPlaybackTime
+			currentPlaybackTime: this._currentPlaybackTime,
 		});
 
 		this.Trigger(C3.Plugins.Genvidtech_GCoreVideoPlugin.Cnds.OnStateChanged);
+	}
+
+	_OnError(e) {
+		this._lastError = e.error;
+		this.Trigger(C3.Plugins.Genvidtech_GCoreVideoPlugin.Cnds.OnError);
+	}
+
+	_GetLastError() {
+		return this._lastError;
 	}
 
 	Draw(renderer) {

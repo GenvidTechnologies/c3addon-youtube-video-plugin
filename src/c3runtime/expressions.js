@@ -5,6 +5,12 @@ C3.Plugins.Genvidtech_GCoreVideoPlugin.Exps =
 	State() {
 		return JSON.stringify(this._GetState());
 	},
+	GetLastErrorCategory() {
+		return this._GetLastError().category;
+	},
+	GetLastErrorMessage() {
+		return this._GetLastError().message;
+	},
 	GetCurrentPlaybackTime() {
 		const state = this._GetState();
 		return state.currentPlaybackTime;

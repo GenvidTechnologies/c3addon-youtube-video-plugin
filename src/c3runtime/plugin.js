@@ -10,6 +10,7 @@ C3.Plugins.Genvidtech_GCoreVideoPlugin = class GCoreVideoPlugin extends C3.SDKDO
 		super(opts, DOM_COMPONENT_ID);
 
 		this.AddElementMessageHandler("state-changed", (sdkInst, e) => sdkInst._OnStateChanged(e));
+		this.AddElementMessageHandler("error", (sdkInst, e) => sdkInst._OnError(e));
 	}
 
 	Release() {

@@ -36,6 +36,9 @@
 
 		Setup() {
 			const { signal } = this.controller;
+			this.element.addEventListener("error", (e) => this.OnIFrameError(e), {
+				signal,
+			});
 			this.element.addEventListener("load", () => this.OnLoad(), { signal });
 
 			const interactiveEvents = [
@@ -68,6 +71,10 @@
 			this.PostToRuntime("state-changed", { state });
 		}
 
+		PostErrorToRuntime(category, message) {
+			this.PostToRuntime("error", { error: { category, message } });
+		}
+
 		OnLoad() {
 			console.log("iframe loaded", this.element.src);
 			if (this.gplayerAPI === null) {
@@ -75,6 +82,12 @@
 				console.log("Player created", this.gplayerAPI);
 			}
 		}
+
+		OnIFrameError(e) {
+			console.error("GCore IFrame error", e);
+			this.PostErrorToRuntime("iframe", `Error loading ${this.element.src}`);
+		}
+
 		UpdateState(e, isNew) {
 			let url = e["url"];
 			const language = e["subtitles"] || "off";
@@ -101,7 +114,7 @@
 
 			this.gplayerAPI.on("error", (err) => {
 				console.error("VideoPlayer API Error", err);
-				// TODO: Send it to runtime and add a trigger/conditions.
+				this.PostErrorToRuntime("gcore", err);
 			});
 
 			this.gplayerAPI.on("play", () => {
@@ -163,7 +176,8 @@
 			});
 		}
 		Destroy() {
-			this.element.removeEventListener("load", this._OnLoadListener);
+			// remove event listeners
+			this.controller.abort();
 			this.element.src = "";
 			if (this.gplayerAPI) {
 				this.gplayerAPI.removeAllListeners();
