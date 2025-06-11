@@ -4,6 +4,15 @@ const C3 = globalThis.C3;
 // This must also match the ID in plugin.js and domSide.js.
 const DOM_COMPONENT_ID = "genvidtech-gcorevideoplugin";
 
+type DebuggerProperties = { 
+	title: string; 
+	properties: { 
+		name: string; 
+		value: string|number|boolean,
+		onedit?: (v: string|number|boolean) => void;
+	}[];
+}[];
+
 class GCoreVideoInstance extends globalThis.ISDKDOMInstanceBase {
 	
 	_url: string = "";
@@ -19,7 +28,7 @@ class GCoreVideoInstance extends globalThis.ISDKDOMInstanceBase {
 	_playerState = "offline";
 	_audioState = "offline";
 
-	_lastError: JSONObject = {
+	_lastError = {
 		category: "",
 		message: ""
 	};
@@ -122,7 +131,7 @@ class GCoreVideoInstance extends globalThis.ISDKDOMInstanceBase {
 	}
 
 	_OnError(e: JSONValue) {
-		this._lastError = (e as JSONObject).error as JSONObject;
+		this._lastError = (e as JSONObject).error as typeof this._lastError;
 		this._trigger(C3.Plugins.Genvidtech_GCoreVideoPlugin.Cnds.OnError);
 	}
 
@@ -232,6 +241,29 @@ class GCoreVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		this._noLowLatency = (o["noLowLatency"] ?? false) as boolean;
 
 		this._updateElementState();		// ensures any state changes are updated in the DOM
+	}
+
+	_getDebuggerProperties(): DebuggerProperties {
+		const prefix = "plugins.genvidtech_gcorevideoplugin.debugger.";
+		return [
+			{
+				title: prefix + "title",
+				properties: [
+					{ name: prefix + "isInitialized", value: this._isInitialized },
+					{ name: prefix + "isReady", value: this._isReady },
+					{ name: prefix + "url", value: this._url, onedit: v => this._SetURL(v as string, this._subtitles, this._noLowLatency) },
+					{ name: prefix + "subtitles", value: this._subtitles, onedit: v => this._SetSubtitles(v as string) },
+					{ name: prefix + "noLowLatency", value: this._noLowLatency, onedit: v => this._SetNoLowLatency(v as boolean) },
+					{ name: prefix + "playbackTime", value: this._currentPlaybackTime, onedit: v => this._SetPlaybackTime(v as number) },
+					{ name: prefix + "volume", value: this._currentVolume, onedit: v => this._SetVolume(v as number) },
+					{ name: prefix + "duration", value: this._duration },
+					{ name: prefix + "playerState", value: this._playerState },
+					{ name: prefix + "audioState", value: this._audioState },
+					{ name: prefix + "lastErrorCategory", value: this._lastError.category as string },
+					{ name: prefix + "lastErrorMessage", value: this._lastError.message as string }
+				]
+			},
+		];
 	}
 };
 

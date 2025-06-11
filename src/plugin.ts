@@ -11,7 +11,6 @@ const SDK = globalThis.SDK;
 const PLUGIN_ID = "Genvidtech_GCoreVideoPlugin";
 ////////////////////////////////////////////
 
-const PLUGIN_VERSION = "1.0.0.5";
 const PLUGIN_CATEGORY = "media";
 
 const PLUGIN_CLASS =
@@ -25,7 +24,6 @@ const PLUGIN_CLASS =
 
       this._info.SetName(self.lang(".name"));
       this._info.SetDescription(self.lang(".description"));
-      this._info.SetVersion(PLUGIN_VERSION);
       this._info.SetCategory(PLUGIN_CATEGORY);
       this._info.SetAuthor("Genvid Technologies LLC");
       this._info.SetHelpUrl(self.lang(".help-url"));
@@ -52,6 +50,7 @@ const PLUGIN_CLASS =
           "expressions",
         ].map((f) => `c3runtime/${f}.js`)
       );
+      this._info.SetRuntimeModuleMainScript("c3runtime/main.js");
       // Load domSide.js in the document context (main thread).
       // This is important for supporting the runtime's web worker mode.
       this._info.SetDOMSideScripts([
