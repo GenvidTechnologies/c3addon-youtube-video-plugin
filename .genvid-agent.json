@@ -1,0 +1,19 @@
+{
+  "project": {
+    "name": "c3addon-gcore-video-player",
+    "description": "Construct3 GCore Video Player add-on by Genvid",
+    "languages": ["typescript", "javascript"]
+  },
+  "commands": {
+    "test": "",
+    "lint": "npm run lint",
+    "build": "npm run build",
+    "validate": "npm run lint && npm run build"
+  },
+  "repo": {
+    "host": "github",
+    "default_branch": "main"
+  },
+  "features": {},
+  "paths": {}
+}

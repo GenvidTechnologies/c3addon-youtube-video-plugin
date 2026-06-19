@@ -1,0 +1,45 @@
+@CONVENTIONS.md
+
+# c3addon-gcore-video-player
+
+<!--
+Project context for Claude Code. The genvid plugin's skills read this
+file for project-specific facts the plugin can't infer. The
+@CONVENTIONS.md import above brings in the plugin's contract.
+-->
+
+Construct 3 add-on (plugin) wrapping the GCore video player for use inside
+Construct 3 games. TypeScript source in `src/` compiles to `dist/` via `tsc`,
+then `dist/` is zipped into a `.c3addon` package.
+
+## Commands
+
+- Lint: `npm run lint`
+- Build: `npm run build` (compiles `src/` → `dist/`, then copies assets)
+- Validate (lint + build): `npm run lint && npm run build`
+- Package: `npm run all:windows` / `npm run all:linux` (lint + build + zip `.c3addon`)
+- Dev server: `npm run devmode`
+
+There is no automated test suite.
+
+## Commit Format
+
+`<type> - <description>`, where `<type>` is one of `feat`, `fix`, or `chore`.
+
+Examples:
+- `feat - Remove SetIsSingleGlobal`
+- `fix - Fix SecondEvents`
+- `chore - Update README, clean up comment`
+
+## Pull Request Format
+
+Title typically mirrors the branch / ticket (e.g. `BUR-4919-no-low-latency`).
+Body should summarize the change and how it was verified (lint + build, manual
+test in Construct 3).
+
+## Branching
+
+- Base branch: `main`.
+- Branch naming: `BUR-<ticket>-<kebab-description>` (e.g. `BUR-4919-no-low-latency`).
+  Use `BUR-0000-...` when there is no associated ticket.
+- Remote: GitHub (`genvid-holdings/c3addon-gcore-video-plugin`).
