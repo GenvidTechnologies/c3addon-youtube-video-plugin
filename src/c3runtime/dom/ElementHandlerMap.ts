@@ -12,7 +12,7 @@ class ElementHandlerMap {
 	constructor() {
 		this._map = new Map();
 	}
-	Set(element: HTMLIFrameElement, handler: IElementHandler) {
+	Set(element: HTMLElement, handler: IElementHandler) {
 		let id = element.id ?? "";
 		if (id !== "") {
 			console.error({ error: "Element already have an id", element });
@@ -28,7 +28,7 @@ class ElementHandlerMap {
 		return handler;
 	}
 
-	Get(element: HTMLIFrameElement) {
+	Get(element: HTMLElement) {
 		const id = element.id;
 		if (!id) {
 			console.error({ error: "No element Id on element", element });
@@ -41,7 +41,7 @@ class ElementHandlerMap {
 		return this._map.get(id);
 	}
 
-	Delete(element: HTMLIFrameElement) {
+	Delete(element: HTMLElement) {
 		const handler = this.Get(element);
 		this._map.delete(element.id);
 		return handler;

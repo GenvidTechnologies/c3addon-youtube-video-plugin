@@ -36,8 +36,14 @@ const PLUGIN_CLASS =
       this._info.AddCommonAppearanceACEs();
       this._info.AddCommonZOrderACEs();
 
+      // The new GCore player build is an ES module with named exports (no
+      // global), so it must be injected as <script type="module">. The actual
+      // Player reference is obtained game-side via a dynamic import() in
+      // ElementHandler.ts; declaring the dependency here also puts the URL on
+      // Construct's CSP/allow-list for exported games.
       this._info.AddRemoteScriptDependency(
-        "https://vplatform.gvideo.co/_players/latest/gplayerAPI.min.js"
+        "https://player.gvideo.co/v2/assets/latest/index.js",
+        "module"
       );
 
       this._info.SetC3RuntimeScripts(

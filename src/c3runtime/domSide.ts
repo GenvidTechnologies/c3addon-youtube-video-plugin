@@ -30,9 +30,9 @@
 	};
 
 	interface IElementHandlerMap {
-		Get(elem: HTMLIFrameElement): IElementHandler | undefined;
-		Set(elem: HTMLIFrameElement, handler: IElementHandler): void;
-		Delete(elem: HTMLIFrameElement): IElementHandler | undefined;
+		Get(elem: HTMLElement): IElementHandler | undefined;
+		Set(elem: HTMLElement, handler: IElementHandler): void;
+		Delete(elem: HTMLElement): IElementHandler | undefined;
 	};
 
 	const HANDLER_CLASS = class GCoreVideoDOMHandler extends globalThis.DOMElementHandler {
@@ -42,19 +42,22 @@
 			super(iRuntime, DOM_COMPONENT_ID);
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			this._handlers = new (globalThis as any).Genvidtech_GCoreVideoPlugin_ElementHandlerMap() as IElementHandlerMap;
-			const handlers: Array<[string, (elem: HTMLIFrameElement, e: JSONObject) => void]> = [
-				["play", (elem: HTMLIFrameElement) => this._handlers.Get(elem)?.OnPlay()],
-				["pause", (elem: HTMLIFrameElement) => this._handlers.Get(elem)?.OnPause()],
-				["mute", (elem: HTMLIFrameElement) => this._handlers.Get(elem)?.OnMute()],
-				["unmute", (elem: HTMLIFrameElement) => this._handlers.Get(elem)?.OnUnmute()],
-				["seek", (elem: HTMLIFrameElement, e: JSONObject) => this._handlers.Get(elem)?.OnSeek(e)],
-				["setVolume", (elem: HTMLIFrameElement, e: JSONObject) => this._handlers.Get(elem)?.OnSetVolume(e)],
+			const handlers: Array<[string, (elem: HTMLElement, e: JSONObject) => void]> = [
+				["play", (elem: HTMLElement) => this._handlers.Get(elem)?.OnPlay()],
+				["pause", (elem: HTMLElement) => this._handlers.Get(elem)?.OnPause()],
+				["mute", (elem: HTMLElement) => this._handlers.Get(elem)?.OnMute()],
+				["unmute", (elem: HTMLElement) => this._handlers.Get(elem)?.OnUnmute()],
+				["seek", (elem: HTMLElement, e: JSONObject) => this._handlers.Get(elem)?.OnSeek(e)],
+				["setVolume", (elem: HTMLElement, e: JSONObject) => this._handlers.Get(elem)?.OnSetVolume(e)],
 			];
-			handlers.map(([e, h]) => this.AddDOMElementMessageHandler(e, (el, data) => h(el as HTMLIFrameElement, data as JSONObject)));
+			handlers.map(([e, h]) => this.AddDOMElementMessageHandler(e, (el, data) => h(el as HTMLElement, data as JSONObject)));
 		}
 
 		CreateElement(elementId: number, e: JSONObject) {
-			const element = document.createElement("iframe");
+			// The new GCore Player attaches to a container element and injects its
+			// own <video> into it, so we hand Construct a <div> to position rather
+			// than an <iframe>.
+			const element = document.createElement("div");
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const handler = new (globalThis as any).Genvidtech_GCoreVideoPlugin_ElementHandler(element, elementId, this) as IElementHandler;
 			this._handlers.Set(element, handler);
@@ -63,18 +66,18 @@
 			// so also update the element state based on those details.
 			handler.UpdateState(e);
 
-			console.log("IFrame created:", element);
+			console.log("Video container created:", element);
 
 			return element;
 		}
 
-		DestroyElement(element: HTMLIFrameElement) {
+		DestroyElement(element: HTMLElement) {
 			const handler = this._handlers.Delete(element);
 			handler?.Destroy();
 			super.DestroyElement(element);
 		}
 
-		UpdateState(elem: HTMLIFrameElement, e: JSONObject) {
+		UpdateState(elem: HTMLElement, e: JSONObject) {
 			// Update the state of the DOM element 'elem' with the state 'e'. The state has been
 			// retrieved by calling GetElementState() in instance.js, which includes all necessary
 			// details to set the correct state of the DOM element.
