@@ -57,3 +57,6 @@ ios/
 html5/
 .vscode
 build*/
+
+# Local planning artifact (genvid-dev plan-task)
+plan.md
