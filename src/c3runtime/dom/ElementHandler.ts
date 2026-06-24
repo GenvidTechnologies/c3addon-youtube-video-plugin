@@ -362,6 +362,8 @@
       if (this.playbackTimer !== null) {
         return;
       }
+      // YouTube provides no `timeupdate` event, so poll getCurrentTime() while
+      // playing. 250ms (~4 updates/sec) keeps the readout smooth without churn.
       this.playbackTimer = globalThis.setInterval(() => {
         if (this.player) {
           this.PostStateToRuntime({ currentPlaybackTime: this.player.getCurrentTime() });
