@@ -18,6 +18,16 @@
 {
   const YOUTUBE_IFRAME_API_URL = "https://www.youtube.com/iframe_api";
 
+  // Human-readable text for the YouTube IFrame API onError codes.
+  // https://developers.google.com/youtube/iframe_api_reference#onError
+  const YT_ERROR_MESSAGES: Record<number, string> = {
+    2: "Invalid video id or parameter",
+    5: "HTML5 player error",
+    100: "Video not found or removed",
+    101: "Embedded playback disabled by the video owner",
+    150: "Embedded playback disabled by the video owner",
+  };
+
   // Minimal surface of the YouTube IFrame Player API we expect to call. The
   // full API is documented at the reference URL above; we only model the bits
   // this plugin uses so we can stay off `any`.
@@ -34,6 +44,7 @@
     setSize(width: number, height: number): void;
     setPlaybackQuality(suggestedQuality: string): void;
     loadVideoById(videoId: string): void;
+    isMuted(): boolean;
     destroy(): void;
   }
 
@@ -147,6 +158,7 @@
     lastMuted: boolean;
     lastVolume: number;
     resizeObserver: ResizeObserver | null;
+    playbackTimer: number | null;
     controller: AbortController;
 
     constructor(
@@ -165,6 +177,7 @@
       this.lastMuted = true;
       this.lastVolume = -1;
       this.resizeObserver = null;
+      this.playbackTimer = null;
       this.controller = new AbortController();
 
       this.Setup();
@@ -285,17 +298,44 @@
           // the runtime ACE layer (playerState, duration, volume, quality,
           // captions, etc.) is driven by real player events. Each of these is
           // tracked as a development-task issue.
-          onReady: () => {
+          onReady: (ev: YTPlayerEvent) => {
             console.log("[video player] YouTube player ready");
-            // TODO(youtube): post duration + volume + initial state, restore
-            // mute/volume, apply subtitles.
+            const player = ev.target;
+            this.PostStateToRuntime({
+              duration: player.getDuration(),
+              currentVolume: player.getVolume() / 100,
+              audioState: player.isMuted() ? "muted" : "unmuted",
+            });
           },
-          onStateChange: () => {
-            // TODO(youtube): map YT.PlayerState (PLAYING/PAUSED/ENDED/BUFFERING/
-            // CUED) to playerState and post currentPlaybackTime/duration.
+          onStateChange: (ev: YTPlayerEvent) => {
+            const PS = YT.PlayerState;
+            switch (ev.data) {
+              case PS.PLAYING:
+                this.PostStateToRuntime({ playerState: "playing" });
+                this.StartPlaybackPolling();
+                break;
+              case PS.PAUSED:
+                this.StopPlaybackPolling();
+                this.PostStateToRuntime({ playerState: "paused" });
+                break;
+              case PS.ENDED:
+                this.StopPlaybackPolling();
+                this.PostStateToRuntime({ playerState: "ended" });
+                break;
+              case PS.BUFFERING:
+                this.StopPlaybackPolling();
+                this.PostStateToRuntime({ playerState: "loading" });
+                break;
+              case PS.UNSTARTED:
+              case PS.CUED:
+                this.PostStateToRuntime({ playerState: "loading" });
+                break;
+            }
           },
           onError: (ev: YTPlayerEvent) => {
-            this.PostErrorToRuntime("youtube", `YouTube player error ${ev.data ?? ""}`);
+            const code = ev.data ?? -1;
+            const message = YT_ERROR_MESSAGES[code] ?? `YouTube player error ${code}`;
+            this.PostErrorToRuntime("youtube", message);
           },
         },
       });
@@ -318,7 +358,28 @@
       }
     }
 
+    StartPlaybackPolling() {
+      if (this.playbackTimer !== null) {
+        return;
+      }
+      // YouTube provides no `timeupdate` event, so poll getCurrentTime() while
+      // playing. 250ms (~4 updates/sec) keeps the readout smooth without churn.
+      this.playbackTimer = globalThis.setInterval(() => {
+        if (this.player) {
+          this.PostStateToRuntime({ currentPlaybackTime: this.player.getCurrentTime() });
+        }
+      }, 250);
+    }
+
+    StopPlaybackPolling() {
+      if (this.playbackTimer !== null) {
+        globalThis.clearInterval(this.playbackTimer);
+        this.playbackTimer = null;
+      }
+    }
+
     DestroyPlayer() {
+      this.StopPlaybackPolling();
       this.resizeObserver?.disconnect();
       this.resizeObserver = null;
       if (this.player) {

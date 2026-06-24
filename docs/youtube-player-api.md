@@ -45,10 +45,13 @@ Key options: `videoId`, `playerVars` (`autoplay`, `controls`, `playsinline`,
 
 These map to the development-task issues:
 
-- **State mapping.** Translate `YT.PlayerState` (UNSTARTED / ENDED / PLAYING /
-  PAUSED / BUFFERING / CUED) into the plugin's `playerState`, and post
-  `duration` / `currentPlaybackTime` / `currentVolume` from player events so the
-  runtime reaches its "ready" state.
+- **State mapping.** *Core playback done (#2).* `onStateChange` maps
+  `YT.PlayerState` (UNSTARTED / ENDED / PLAYING / PAUSED / BUFFERING / CUED) to the
+  plugin's `playerState`; `onReady` posts `duration` / `currentVolume` (and
+  `audioState`) so the runtime reaches its "ready" state; `currentPlaybackTime` is
+  polled while playing (YouTube has no `timeupdate` event). `onError` maps the YT
+  error codes to readable messages. Still open: quality/captions/DVR/subtitle
+  fields (see the bullets below and their issues).
 - **URL → video id.** `extractVideoId()` handles `watch?v=`, `youtu.be/`,
   `/embed/`, `/shorts/`, `/v/`, and bare ids. Confirm the set of inputs Construct
   authors will actually paste.
