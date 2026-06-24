@@ -8,13 +8,13 @@ const SDK = globalThis.SDK;
 // Only the plugin name is displayed in the editor, so to rename your plugin change the name but NOT the ID.
 // If you want to completely replace a plugin, make it deprecated (it will be hidden but old projects keep working),
 // and create an entirely new plugin with a different plugin ID.
-const PLUGIN_ID = "Genvidtech_GCoreVideoPlugin";
+const PLUGIN_ID = "Genvidtech_YouTubeVideoPlugin";
 ////////////////////////////////////////////
 
 const PLUGIN_CATEGORY = "media";
 
 const PLUGIN_CLASS =
-  (SDK.Plugins.Genvidtech_GCoreVideoPlugin = class GCoreVideoPlugin extends (
+  (SDK.Plugins.Genvidtech_YouTubeVideoPlugin = class YouTubeVideoPlugin extends (
     SDK.IPluginBase
   ) {
     constructor() {
@@ -36,14 +36,13 @@ const PLUGIN_CLASS =
       this._info.AddCommonAppearanceACEs();
       this._info.AddCommonZOrderACEs();
 
-      // The new GCore player build is an ES module with named exports (no
-      // global), so it must be injected as <script type="module">. The actual
-      // Player reference is obtained game-side via a dynamic import() in
-      // ElementHandler.ts; declaring the dependency here also puts the URL on
+      // The YouTube IFrame Player API is a classic (non-module) script that
+      // exposes a global `YT` namespace and invokes window.onYouTubeIframeAPIReady
+      // once it is ready. ElementHandler.ts waits on that hook before
+      // constructing players. Declaring the dependency here also puts the URL on
       // Construct's CSP/allow-list for exported games.
       this._info.AddRemoteScriptDependency(
-        "https://player.gvideo.co/v2/assets/latest/index.js",
-        "module"
+        "https://www.youtube.com/iframe_api"
       );
 
       this._info.SetC3RuntimeScripts(

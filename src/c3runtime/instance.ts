@@ -2,7 +2,7 @@ const C3 = globalThis.C3;
 
 // NOTE: use a unique DOM component ID to ensure it doesn't clash with anything else.
 // This must also match the ID in plugin.js and domSide.js.
-const DOM_COMPONENT_ID = "genvidtech-gcorevideoplugin";
+const DOM_COMPONENT_ID = "genvidtech-youtubevideoplugin";
 
 type DebuggerProperties = { 
 	title: string; 
@@ -13,7 +13,7 @@ type DebuggerProperties = {
 	}[];
 }[];
 
-class GCoreVideoInstance extends globalThis.ISDKDOMInstanceBase {
+class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 	
 	_url: string = "";
 	_subtitles: string = "";
@@ -187,7 +187,7 @@ class GCoreVideoInstance extends globalThis.ISDKDOMInstanceBase {
 			// Fire the dedicated trigger so the game can rebuild its subtitle menu.
 			if (state.subtitleTracks !== undefined) {
 				this._subtitleTracks = state.subtitleTracks as Array<{ language: string; label: string }>;
-				this._trigger(C3.Plugins.Genvidtech_GCoreVideoPlugin.Cnds.OnSubtitlesAvailable);
+				this._trigger(C3.Plugins.Genvidtech_YouTubeVideoPlugin.Cnds.OnSubtitlesAvailable);
 			}
 
 			// Mark the video as ready (loaded and playable) once its volume and
@@ -197,12 +197,12 @@ class GCoreVideoInstance extends globalThis.ISDKDOMInstanceBase {
 			}
 		}
 
-		this._trigger(C3.Plugins.Genvidtech_GCoreVideoPlugin.Cnds.OnStateChanged);
+		this._trigger(C3.Plugins.Genvidtech_YouTubeVideoPlugin.Cnds.OnStateChanged);
 	}
 
 	_OnError(e: JSONValue) {
 		this._lastError = (e as JSONObject).error as typeof this._lastError;
-		this._trigger(C3.Plugins.Genvidtech_GCoreVideoPlugin.Cnds.OnError);
+		this._trigger(C3.Plugins.Genvidtech_YouTubeVideoPlugin.Cnds.OnError);
 	}
 
 	_GetLastError() {
@@ -290,7 +290,7 @@ class GCoreVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		try {
 			url = await this.runtime.assets.getProjectFileUrl(file);
 		} catch (e) {
-			console.error("[GCoreVideo] Could not resolve project file", file, e);
+			console.error("[YouTubeVideo] Could not resolve project file", file, e);
 			return;
 		}
 		this._AddSubtitleSource(url, language, label);
@@ -430,7 +430,7 @@ class GCoreVideoInstance extends globalThis.ISDKDOMInstanceBase {
 	}
 
 	_getDebuggerProperties(): DebuggerProperties {
-		const prefix = "plugins.genvidtech_gcorevideoplugin.debugger.";
+		const prefix = "plugins.genvidtech_youtubevideoplugin.debugger.";
 		return [
 			{
 				title: prefix + "title",
@@ -463,6 +463,6 @@ class GCoreVideoInstance extends globalThis.ISDKDOMInstanceBase {
 	}
 };
 
-C3.Plugins.Genvidtech_GCoreVideoPlugin.Instance = GCoreVideoInstance;
+C3.Plugins.Genvidtech_YouTubeVideoPlugin.Instance = YouTubeVideoInstance;
 
-export type { GCoreVideoInstance as SDKInstanceClass };
+export type { YouTubeVideoInstance as SDKInstanceClass };

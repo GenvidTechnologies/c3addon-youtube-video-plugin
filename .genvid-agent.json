@@ -1,7 +1,7 @@
 {
   "project": {
-    "name": "c3addon-gcore-video-player",
-    "description": "Construct3 GCore Video Player add-on by Genvid",
+    "name": "c3addon-youtube-video-player",
+    "description": "Construct3 YouTube Video Player add-on by Genvid",
     "languages": ["typescript", "javascript"]
   },
   "commands": {

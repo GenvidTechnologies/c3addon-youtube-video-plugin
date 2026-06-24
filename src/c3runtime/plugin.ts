@@ -4,10 +4,10 @@ const C3 = globalThis.C3;
 
 // NOTE: use a unique DOM component ID to ensure it doesn't clash with anything else
 // This must also match the ID in instance.js and domSide.js.
-const DOM_COMPONENT_ID = "genvidtech-gcorevideoplugin";
+const DOM_COMPONENT_ID = "genvidtech-youtubevideoplugin";
 
 // NOTE: DOM plugins derive from C3.SDKDOMPluginBase, not C3.SDKPluginBase.
-C3.Plugins.Genvidtech_GCoreVideoPlugin = class GCoreVideoPlugin extends globalThis.ISDKDOMPluginBase {
+C3.Plugins.Genvidtech_YouTubeVideoPlugin = class YouTubeVideoPlugin extends globalThis.ISDKDOMPluginBase {
 	constructor() {
 		super({ domComponentId: DOM_COMPONENT_ID });
 

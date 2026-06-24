@@ -1,9 +1,9 @@
 
 const SDK = self.SDK;
 
-const PLUGIN_CLASS = SDK.Plugins.Genvidtech_GCoreVideoPlugin;
+const PLUGIN_CLASS = SDK.Plugins.Genvidtech_YouTubeVideoPlugin;
 
-PLUGIN_CLASS.Instance = class GCoreVideoInstance extends SDK.IWorldInstanceBase {
+PLUGIN_CLASS.Instance = class YouTubeVideoInstance extends SDK.IWorldInstanceBase {
 
 	_webglText: SDK.Gfx.IWebGLText | null = null;
 

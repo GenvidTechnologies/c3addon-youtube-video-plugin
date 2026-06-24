@@ -16,7 +16,7 @@
 
 	// NOTE: use a unique DOM component ID to ensure it doesn't clash with anything else
 	// This must also match the ID in instance.js and plugin.js.
-	const DOM_COMPONENT_ID = "genvidtech-gcorevideoplugin";
+	const DOM_COMPONENT_ID = "genvidtech-youtubevideoplugin";
 
 	interface IElementHandler {
 		OnPlay(): void;
@@ -37,13 +37,13 @@
 		Delete(elem: HTMLElement): IElementHandler | undefined;
 	};
 
-	const HANDLER_CLASS = class GCoreVideoDOMHandler extends globalThis.DOMElementHandler {
+	const HANDLER_CLASS = class YouTubeVideoDOMHandler extends globalThis.DOMElementHandler {
 		_handlers: IElementHandlerMap;
 
 		constructor(iRuntime: IRuntimeInterface) {
 			super(iRuntime, DOM_COMPONENT_ID);
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			this._handlers = new (globalThis as any).Genvidtech_GCoreVideoPlugin_ElementHandlerMap() as IElementHandlerMap;
+			this._handlers = new (globalThis as any).Genvidtech_YouTubeVideoPlugin_ElementHandlerMap() as IElementHandlerMap;
 			const handlers: Array<[string, (elem: HTMLElement, e: JSONObject) => void]> = [
 				["play", (elem: HTMLElement) => this._handlers.Get(elem)?.OnPlay()],
 				["pause", (elem: HTMLElement) => this._handlers.Get(elem)?.OnPause()],
@@ -58,12 +58,12 @@
 		}
 
 		CreateElement(elementId: number, e: JSONObject) {
-			// The new GCore Player attaches to a container element and injects its
-			// own <video> into it, so we hand Construct a <div> to position rather
-			// than an <iframe>.
+			// The YouTube IFrame Player API replaces a given container element with
+			// its own <iframe>, so we hand Construct a <div> to position; the
+			// ElementHandler builds the YT.Player on top of it.
 			const element = document.createElement("div");
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const handler = new (globalThis as any).Genvidtech_GCoreVideoPlugin_ElementHandler(element, elementId, this) as IElementHandler;
+			const handler = new (globalThis as any).Genvidtech_YouTubeVideoPlugin_ElementHandler(element, elementId, this) as IElementHandler;
 			this._handlers.Set(element, handler);
 
 			// The create message includes the state retrieved by GetElementState() in instance.js,

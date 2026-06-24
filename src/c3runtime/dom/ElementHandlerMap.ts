@@ -18,7 +18,7 @@ class ElementHandlerMap {
 			console.error({ error: "Element already have an id", element });
 			throw new Error("Element already initialized!");
 		}
-		id = `gcore_${handler.elementId}`;
+		id = `youtube_${handler.elementId}`;
 		if (this._map.has(id)) {
 			console.error({ error: "Handler already exists", id });
 			throw new Error("Handler already exists");
@@ -49,6 +49,6 @@ class ElementHandlerMap {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-(globalThis as any).Genvidtech_GCoreVideoPlugin_ElementHandlerMap = ElementHandlerMap;
+(globalThis as any).Genvidtech_YouTubeVideoPlugin_ElementHandlerMap = ElementHandlerMap;
 
 }

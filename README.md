@@ -1,15 +1,17 @@
-# Genvid Construct 3 Addon Template
+# Genvid YouTube Video — Construct 3 Add-on
 
-## Template Setup
+A Construct 3 plugin that embeds and controls YouTube videos via the
+[YouTube IFrame Player API](https://developers.google.com/youtube/iframe_api_reference).
 
-1. Replace the name of the module `c3addon-template` with your own.
-2. Replace all occurences of `Genvidtech_GCoreVideoPlugin` with the plugin's ID.
+> **Fork status:** forked from the Genvid GCore Video plugin. Identity, metadata
+> and the build pipeline are rebranded for YouTube; the player integration in
+> `src/c3runtime/dom/ElementHandler.ts` is currently a YouTube IFrame API
+> scaffold/stub. Remaining work is tracked in this repo's GitHub issues.
 
 ## To use
 
-See [`docs/usage.md`](docs/usage.md) for a task-oriented guide covering video
-loading, subtitles, quality levels, DVR, the player control bar, and v2.0.0
-breaking changes.
+See [`docs/usage.md`](docs/usage.md) for a task-oriented guide. Note: the usage
+guide is being rewritten for YouTube (see open issues).
 
 ## To develop
 
@@ -42,7 +44,7 @@ where platform is either `windows` or `linux`.
 ## CI/CD
 
 - **CI** (`.github/workflows/ci.yml`): runs lint + build on every PR and on pushes to `main`. The built `.c3addon` is attached as a downloadable workflow artifact on each run.
-- **Releases** (`.github/workflows/release.yml`): push a digit-first version tag to cut a release. The workflow builds and publishes `Genvidtech_GCoreVideoPlugin.c3addon` to the repo's GitHub Releases page.
+- **Releases** (`.github/workflows/release.yml`): push a digit-first version tag to cut a release. The workflow builds and publishes `Genvidtech_YouTubeVideoPlugin.c3addon` to the repo's GitHub Releases page.
 
 ```bash
 git tag 1.1.0.0 && git push origin 1.1.0.0

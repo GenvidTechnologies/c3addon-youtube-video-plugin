@@ -2,7 +2,7 @@ import type { SDKInstanceClass } from "./instance.js";
 
 const C3 = self.C3;
 
-C3.Plugins.Genvidtech_GCoreVideoPlugin.Acts = {
+C3.Plugins.Genvidtech_YouTubeVideoPlugin.Acts = {
 	Play(this: SDKInstanceClass) {
 		this._Play();
 	},
