@@ -10,6 +10,10 @@ written so the plugin's skills can discover them.
 - [architecture.md](architecture.md) — editor/runtime split, the DOM message bridge, and why player-API coupling is isolated to `ElementHandler.ts`.
 - [youtube-player-api.md](youtube-player-api.md) — the YouTube IFrame Player API surface used by the plugin (loading the API, building `YT.Player`, events, methods). Currently a scaffold; findings are filled in as the integration is built.
 
+## Process
+
+- [issue-triage.md](issue-triage.md) — issue-triage conventions (flat-label variant) consumed by `/genvid-dev:triage-issues`: category labels, required fields, splitting/duplicates/dependencies policy, and the `gh` mutation recipes.
+
 ## Decision Records
 
 - [decisions/0001-additive-v2-api-expansion.md](decisions/0001-additive-v2-api-expansion.md) — **inherited from the GCore upstream (historical).** Additive-only ACE expansion, construction-time rebuild discipline, and empirical verification mandate for the GCore v2 API conversion. Its "(issue #1)" refers to the upstream GCore repo, not this fork's issue #1 (the YouTube port epic).
