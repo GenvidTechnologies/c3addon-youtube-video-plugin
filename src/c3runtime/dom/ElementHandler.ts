@@ -18,6 +18,16 @@
 {
   const YOUTUBE_IFRAME_API_URL = "https://www.youtube.com/iframe_api";
 
+  // Human-readable text for the YouTube IFrame API onError codes.
+  // https://developers.google.com/youtube/iframe_api_reference#onError
+  const YT_ERROR_MESSAGES: Record<number, string> = {
+    2: "Invalid video id or parameter",
+    5: "HTML5 player error",
+    100: "Video not found or removed",
+    101: "Embedded playback disabled by the video owner",
+    150: "Embedded playback disabled by the video owner",
+  };
+
   // Minimal surface of the YouTube IFrame Player API we expect to call. The
   // full API is documented at the reference URL above; we only model the bits
   // this plugin uses so we can stay off `any`.
@@ -34,6 +44,7 @@
     setSize(width: number, height: number): void;
     setPlaybackQuality(suggestedQuality: string): void;
     loadVideoById(videoId: string): void;
+    isMuted(): boolean;
     destroy(): void;
   }
 
@@ -295,7 +306,9 @@
             // CUED) to playerState and post currentPlaybackTime/duration.
           },
           onError: (ev: YTPlayerEvent) => {
-            this.PostErrorToRuntime("youtube", `YouTube player error ${ev.data ?? ""}`);
+            const code = ev.data ?? -1;
+            const message = YT_ERROR_MESSAGES[code] ?? `YouTube player error ${code}`;
+            this.PostErrorToRuntime("youtube", message);
           },
         },
       });
