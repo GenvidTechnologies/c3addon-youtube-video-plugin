@@ -298,10 +298,14 @@
           // the runtime ACE layer (playerState, duration, volume, quality,
           // captions, etc.) is driven by real player events. Each of these is
           // tracked as a development-task issue.
-          onReady: () => {
+          onReady: (ev: YTPlayerEvent) => {
             console.log("[video player] YouTube player ready");
-            // TODO(youtube): post duration + volume + initial state, restore
-            // mute/volume, apply subtitles.
+            const player = ev.target;
+            this.PostStateToRuntime({
+              duration: player.getDuration(),
+              currentVolume: player.getVolume() / 100,
+              audioState: player.isMuted() ? "muted" : "unmuted",
+            });
           },
           onStateChange: (ev: YTPlayerEvent) => {
             const PS = YT.PlayerState;
