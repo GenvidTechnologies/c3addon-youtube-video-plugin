@@ -6,9 +6,9 @@ Each entry should be a one-line description. Add docs here as they are
 written so the plugin's skills can discover them.
 -->
 
-- [usage.md](usage.md) — user-facing guide for Construct 3 developers: loading videos, subtitles, quality, DVR, chrome, and v2.0.0 breaking changes.
+- [usage.md](usage.md) — user-facing guide for Construct 3 developers. **Being rewritten for YouTube** (still describes the GCore-era surface; see open issues).
 - [architecture.md](architecture.md) — editor/runtime split, the DOM message bridge, and why player-API coupling is isolated to `ElementHandler.ts`.
-- [gcore-player-api.md](gcore-player-api.md) — the GCore `@gcorevideo/player` v2 API surface used by the plugin (loading, events, methods, quality levels, chrome/control-bar, multi-source failover, subtitles); includes empirically-verified findings and pending items (low latency, DVR, side-loaded subtitles) awaiting a live/LL/DVR stream.
+- [youtube-player-api.md](youtube-player-api.md) — the YouTube IFrame Player API surface used by the plugin (loading the API, building `YT.Player`, events, methods). Currently a scaffold; findings are filled in as the integration is built.
 
 ## Decision Records
 

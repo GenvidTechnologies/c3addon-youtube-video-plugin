@@ -2,7 +2,7 @@ import type { SDKInstanceClass } from "./instance";
 
 const C3 = globalThis.C3;
 
-C3.Plugins.Genvidtech_GCoreVideoPlugin.Exps =
+C3.Plugins.Genvidtech_YouTubeVideoPlugin.Exps =
 {
 	State(this:SDKInstanceClass) {
 		return JSON.stringify(this._GetState());

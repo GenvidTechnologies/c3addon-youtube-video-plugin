@@ -3,13 +3,13 @@
 	"is-c3-addon": true,
 	"sdk-version": 2,
 	"type": "plugin",
-	"name": "Genvid GCore Video",
-	"id": "Genvidtech_GCoreVideoPlugin",
+	"name": "Genvid YouTube Video",
+	"id": "Genvidtech_YouTubeVideoPlugin",
 	"version": "2.0.0.0",
 	"author": "Genvid Technologies, LLC",
-	"website": "https://github.com/genvid-holdings/c3addon-gcore-video-plugin",
-	"documentation": "https://github.com/genvid-holdings/c3addon-gcore-video-plugin",
-	"description": "Gcore Video Player integration by Genvid Technologies.",
+	"website": "https://github.com/genvid-holdings/c3addon-youtube-video-plugin",
+	"documentation": "https://github.com/genvid-holdings/c3addon-youtube-video-plugin",
+	"description": "YouTube Video Player integration by Genvid Technologies.",
 	"editor-scripts": [
 		"plugin.js",
 		"instance.js"

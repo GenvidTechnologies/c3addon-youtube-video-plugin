@@ -1,17 +1,17 @@
 ﻿{
 	"$schema": "../../SDK/plugin-sdk/v2/plugin.lang.schema.json",
 	"languageTag": "en-US",
-	"fileDescription": "Strings for Genvidtech_GCoreVideoPlugin.",
+	"fileDescription": "Strings for Genvidtech_YouTubeVideoPlugin.",
 	"text": {
 		"plugins": {
-			"genvidtech_gcorevideoplugin": {
-				"name": "GCore Video Plugin",
-				"description": "GCore Video Plugin integration by Genvid Technologies",
-				"help-url": "https://github.com/genvid-holdings/c3addon-gcore-video-plugin",
+			"genvidtech_youtubevideoplugin": {
+				"name": "YouTube Video Plugin",
+				"description": "YouTube Video Plugin integration by Genvid Technologies",
+				"help-url": "https://github.com/genvid-holdings/c3addon-youtube-video-plugin",
 				"properties": {
 					"video-url": {
 						"name": "URL",
-						"desc": "The GCore Video URL"
+						"desc": "The YouTube Video URL"
 					},
 					"video-subtitles": {
 						"name": "Subtitles",
@@ -23,11 +23,11 @@
 					},
 					"enable-chrome": {
 						"name": "Enable Chrome",
-						"desc": "Show the GCore MediaControl control bar (player built-in UI). Off by default; hosts typically provide their own UI."
+						"desc": "Show the YouTube player control bar (player built-in UI). Off by default; hosts typically provide their own UI."
 					},
 					"enable-dvr": {
 						"name": "Enable DVR",
-						"desc": "Enable DVR mode (seekable live window). Sets playbackType: 'dvr' on the player config. Unverified against a live DVR stream — see docs/gcore-player-api.md A6."
+						"desc": "Enable DVR mode (seekable live window). Sets playbackType: 'dvr' on the player config. Unverified against a live DVR stream — see docs/youtube-player-api.md A6."
 					}
 				},
 				"aceCategories": {
@@ -82,7 +82,7 @@
 					"is-dvr": {
 						"list-name": "Is DVR",
 						"display-text": "Is DVR",
-						"description": "Whether the current stream is a DVR (seekable live) stream. Unverified against a live DVR stream — see docs/gcore-player-api.md A6."
+						"description": "Whether the current stream is a DVR (seekable live) stream. Unverified against a live DVR stream — see docs/youtube-player-api.md A6."
 					},
 					"has-subtitles": {
 						"list-name": "Has subtitles",
@@ -212,7 +212,7 @@
 					"set-enable-chrome": {
 						"list-name": "Set Enable Chrome",
 						"display-text": "Set player built-in control bar (chrome) enabled to {0}",
-						"description": "Show or hide the GCore MediaControl control bar. This is a live change and does not require a player rebuild.",
+						"description": "Show or hide the YouTube player control bar. This is a live change and does not require a player rebuild.",
 						"params": {
 							"enable": {
 								"name": "Enable",
@@ -277,7 +277,7 @@
 					"set-enable-dvr": {
 						"list-name": "Set Enable DVR",
 						"display-text": "Set DVR mode enabled to {0}",
-						"description": "Enable or disable DVR mode (seekable live window). Requires a player rebuild to take effect. Unverified against a live DVR stream — see docs/gcore-player-api.md A6.",
+						"description": "Enable or disable DVR mode (seekable live window). Requires a player rebuild to take effect. Unverified against a live DVR stream — see docs/youtube-player-api.md A6.",
 						"params": {
 							"enable": {
 								"name": "Enable",
@@ -292,7 +292,7 @@
 						"translated-name": "State"
 					},
 					"get-last-error-category": {
-						"description": "The last error category.  Could be 'iframe' or 'gcore'.",
+						"description": "The last error category.  Could be 'iframe' or 'youtube'.",
 						"translated-name": "GetLastErrorCategory"
 					},
 					"get-last-error-message": {
@@ -324,7 +324,7 @@
 						"translated-name": "NoLowLatency"
 					},
 					"get-enable-chrome": {
-						"description": "Whether the GCore MediaControl control bar (player built-in UI) is enabled.",
+						"description": "Whether the YouTube player control bar (player built-in UI) is enabled.",
 						"translated-name": "GetEnableChrome"
 					},
 					"get-current-quality": {
@@ -336,11 +336,11 @@
 						"translated-name": "GetQualityCount"
 					},
 					"get-seekable-start": {
-						"description": "The start of the DVR seekable window (seconds). 0 when not in DVR mode or window is unknown. Unverified against a live DVR stream — see docs/gcore-player-api.md A6.",
+						"description": "The start of the DVR seekable window (seconds). 0 when not in DVR mode or window is unknown. Unverified against a live DVR stream — see docs/youtube-player-api.md A6.",
 						"translated-name": "GetSeekableStart"
 					},
 					"get-seekable-end": {
-						"description": "The end of the DVR seekable window (seconds). -1 when not in DVR mode or window is unknown. Unverified against a live DVR stream — see docs/gcore-player-api.md A6.",
+						"description": "The end of the DVR seekable window (seconds). -1 when not in DVR mode or window is unknown. Unverified against a live DVR stream — see docs/youtube-player-api.md A6.",
 						"translated-name": "GetSeekableEnd"
 					},
 					"get-subtitle-count": {
@@ -369,7 +369,7 @@
 					}
 				},
 				"debugger": {
-					"title": "GCore Video Player",
+					"title": "YouTube Video Player",
 					"url": "Base URL",
 					"subtitles": "Subtitles",
 					"noLowLatency": "Disable Low Latency",

@@ -1,10 +1,16 @@
-# GCore Video Plugin — Usage Guide
+# YouTube Video Plugin — Usage Guide
 
-**Version:** 2.0.0 | **Audience:** Construct 3 game developers using the plugin's ACEs
+> **⚠️ Out of date — being rewritten for YouTube.** This guide still documents
+> the GCore-era ACE surface (manifest URLs, low-latency, DVR, in-manifest
+> subtitles). The plugin has been forked to the YouTube IFrame Player API and
+> the player integration is currently a scaffold/stub. The behavior described
+> below does not yet apply. Tracked in the repo's GitHub issues.
 
-This guide covers how to drive the GCore Video Plugin from Construct 3 event
-sheets. It does not cover plugin internals; for those see
-[`architecture.md`](architecture.md) and [`gcore-player-api.md`](gcore-player-api.md).
+**Audience:** Construct 3 game developers using the plugin's ACEs
+
+This guide covers how to drive the plugin from Construct 3 event sheets. It does
+not cover plugin internals; for those see [`architecture.md`](architecture.md)
+and [`youtube-player-api.md`](youtube-player-api.md).
 
 ---
 
