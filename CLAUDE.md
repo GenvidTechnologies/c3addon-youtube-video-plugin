@@ -68,3 +68,17 @@ test in Construct 3).
 - Branch naming: `BUR-<ticket>-<kebab-description>` (e.g. `BUR-4919-no-low-latency`).
   Use `BUR-0000-...` when there is no associated ticket.
 - Remote: GitHub (`genvid-holdings/c3addon-youtube-video-plugin`).
+
+### Fork remotes — read before any `gh` command
+
+This repo is a **fork** of `c3addon-gcore-video-plugin`, so it has two remotes:
+`origin` = `genvid-holdings/c3addon-youtube-video-plugin` (this plugin) and
+`upstream` = `genvid-holdings/c3addon-gcore-video-plugin` (the GCore original).
+
+With two remotes, **unscoped `gh` commands can resolve to `upstream`** — e.g.
+`gh issue list` / `gh repo view` may target the GCore repo, and the unscoped
+`bugTracker` queries in `.genvid-agent.json` inherit the same default. A default
+is set (`gh repo set-default genvid-holdings/c3addon-youtube-video-plugin`); if a
+`gh` call ever hits the wrong repo, re-run that, or pass
+`-R genvid-holdings/c3addon-youtube-video-plugin` explicitly. Pull GCore changes
+to cherry-pick with `git fetch upstream`.

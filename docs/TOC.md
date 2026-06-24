@@ -12,4 +12,4 @@ written so the plugin's skills can discover them.
 
 ## Decision Records
 
-- [decisions/0001-additive-v2-api-expansion.md](decisions/0001-additive-v2-api-expansion.md) — additive-only ACE expansion, construction-time rebuild discipline, and empirical verification mandate for the full v2 API conversion (issue #1).
+- [decisions/0001-additive-v2-api-expansion.md](decisions/0001-additive-v2-api-expansion.md) — **inherited from the GCore upstream (historical).** Additive-only ACE expansion, construction-time rebuild discipline, and empirical verification mandate for the GCore v2 API conversion. Its "(issue #1)" refers to the upstream GCore repo, not this fork's issue #1 (the YouTube port epic).
