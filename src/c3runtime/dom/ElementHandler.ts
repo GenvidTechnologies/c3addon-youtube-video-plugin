@@ -158,6 +158,7 @@
     lastMuted: boolean;
     lastVolume: number;
     resizeObserver: ResizeObserver | null;
+    playbackTimer: number | null;
     controller: AbortController;
 
     constructor(
@@ -176,6 +177,7 @@
       this.lastMuted = true;
       this.lastVolume = -1;
       this.resizeObserver = null;
+      this.playbackTimer = null;
       this.controller = new AbortController();
 
       this.Setup();
@@ -301,9 +303,30 @@
             // TODO(youtube): post duration + volume + initial state, restore
             // mute/volume, apply subtitles.
           },
-          onStateChange: () => {
-            // TODO(youtube): map YT.PlayerState (PLAYING/PAUSED/ENDED/BUFFERING/
-            // CUED) to playerState and post currentPlaybackTime/duration.
+          onStateChange: (ev: YTPlayerEvent) => {
+            const PS = YT.PlayerState;
+            switch (ev.data) {
+              case PS.PLAYING:
+                this.PostStateToRuntime({ playerState: "playing" });
+                this.StartPlaybackPolling();
+                break;
+              case PS.PAUSED:
+                this.StopPlaybackPolling();
+                this.PostStateToRuntime({ playerState: "paused" });
+                break;
+              case PS.ENDED:
+                this.StopPlaybackPolling();
+                this.PostStateToRuntime({ playerState: "ended" });
+                break;
+              case PS.BUFFERING:
+                this.StopPlaybackPolling();
+                this.PostStateToRuntime({ playerState: "loading" });
+                break;
+              case PS.UNSTARTED:
+              case PS.CUED:
+                this.PostStateToRuntime({ playerState: "loading" });
+                break;
+            }
           },
           onError: (ev: YTPlayerEvent) => {
             const code = ev.data ?? -1;
@@ -331,7 +354,26 @@
       }
     }
 
+    StartPlaybackPolling() {
+      if (this.playbackTimer !== null) {
+        return;
+      }
+      this.playbackTimer = globalThis.setInterval(() => {
+        if (this.player) {
+          this.PostStateToRuntime({ currentPlaybackTime: this.player.getCurrentTime() });
+        }
+      }, 250);
+    }
+
+    StopPlaybackPolling() {
+      if (this.playbackTimer !== null) {
+        globalThis.clearInterval(this.playbackTimer);
+        this.playbackTimer = null;
+      }
+    }
+
     DestroyPlayer() {
+      this.StopPlaybackPolling();
       this.resizeObserver?.disconnect();
       this.resizeObserver = null;
       if (this.player) {
