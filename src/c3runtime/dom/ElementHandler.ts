@@ -286,13 +286,7 @@
       // replaces the element with an <iframe>.
       this.player = new YT.Player(this.element, {
         videoId,
-        // TODO(youtube): map plugin properties to playerVars (controls,
-        // autoplay, mute, playsinline, cc_load_policy, …) — GitHub issues.
-        playerVars: {
-          autoplay: 1,
-          controls: this.enableChrome ? 1 : 0,
-          playsinline: 1,
-        },
+        playerVars: this.buildPlayerVars(videoId),
         events: {
           // TODO(youtube): translate these into PostStateToRuntime() calls so
           // the runtime ACE layer (playerState, duration, volume, quality,
@@ -345,6 +339,15 @@
       this.resizeObserver?.disconnect();
       this.resizeObserver = new ResizeObserver(() => this.ResizePlayer());
       this.resizeObserver.observe(this.element);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private buildPlayerVars(_videoId: string): object {
+      return {
+        autoplay: 1,
+        controls: this.enableChrome ? 1 : 0,
+        playsinline: 1,
+      };
     }
 
     ResizePlayer() {
