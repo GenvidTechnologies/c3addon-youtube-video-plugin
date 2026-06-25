@@ -153,6 +153,8 @@
     currentVideoId: string;
     subtitleLang: string;
     enableChrome: boolean;
+    loop: boolean;
+    start: number;
     // Audio state carried across video loads (mirrors the GCore handler so the
     // ACE/runtime layer keeps the same contract). Volume is kept in 0..1 units.
     lastMuted: boolean;
@@ -174,6 +176,8 @@
       this.currentVideoId = "";
       this.subtitleLang = "off";
       this.enableChrome = true;
+      this.loop = false;
+      this.start = 0;
       this.lastMuted = true;
       this.lastVolume = -1;
       this.resizeObserver = null;
@@ -231,6 +235,8 @@
       const url = (e["url"] ?? "") as string;
       this.subtitleLang = (e["subtitles"] ?? "off") as string;
       this.enableChrome = (e["enableChrome"] ?? true) as boolean;
+      this.loop = (e["loop"] ?? false) as boolean;
+      this.start = (e["start"] ?? 0) as number;
       // TODO(youtube): map the remaining incoming state — subtitles selection,
       // quality, fallback URLs, DVR/live flags — onto YouTube IFrame player
       // options. Tracked in the repo's GitHub issues.
@@ -276,6 +282,8 @@
 
       // If a player already exists, reuse it by loading the new video.
       if (this.player) {
+        // NOTE: loop/start (and other playerVars) apply only at YT.Player construction;
+        // they are NOT re-applied on loadVideoById — a rebuild is required.
         // TODO(youtube): cueVideoById vs loadVideoById (autoplay policy), and
         // re-apply audio/subtitle/quality state. Tracked in GitHub issues.
         this.player.loadVideoById(videoId);
@@ -286,13 +294,7 @@
       // replaces the element with an <iframe>.
       this.player = new YT.Player(this.element, {
         videoId,
-        // TODO(youtube): map plugin properties to playerVars (controls,
-        // autoplay, mute, playsinline, cc_load_policy, …) — GitHub issues.
-        playerVars: {
-          autoplay: 1,
-          controls: this.enableChrome ? 1 : 0,
-          playsinline: 1,
-        },
+        playerVars: this.buildPlayerVars(videoId),
         events: {
           // TODO(youtube): translate these into PostStateToRuntime() calls so
           // the runtime ACE layer (playerState, duration, volume, quality,
@@ -345,6 +347,34 @@
       this.resizeObserver?.disconnect();
       this.resizeObserver = new ResizeObserver(() => this.ResizePlayer());
       this.resizeObserver.observe(this.element);
+    }
+
+    private buildPlayerVars(videoId: string): object {
+      const safeOrigin = (): string | undefined => {
+        const o = typeof window !== "undefined" ? window.location.origin : "";
+        return /^https?:\/\//.test(o) ? o : undefined;
+      };
+      const vars: Record<string, number | string> = {
+        autoplay: 1,
+        playsinline: 1,
+        rel: 0,
+        controls: this.enableChrome ? 1 : 0,
+        mute: this.lastMuted ? 1 : 0,
+        cc_load_policy: this.subtitleLang !== "off" ? 1 : 0,
+      };
+      if (this.loop) {
+        vars["loop"] = 1;
+        vars["playlist"] = videoId; // YouTube requires playlist=videoId for single-video loop
+      }
+      if (this.start > 0) {
+        vars["start"] = this.start;
+      }
+      const origin = safeOrigin();
+      if (origin !== undefined) {
+        vars["origin"] = origin;
+      }
+      console.debug("[video player] playerVars", vars);
+      return vars;
     }
 
     ResizePlayer() {

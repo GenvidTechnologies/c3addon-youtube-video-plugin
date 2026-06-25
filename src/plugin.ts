@@ -72,6 +72,8 @@ const PLUGIN_CLASS =
         new SDK.PluginProperty("check", "no-low-latency", false),
         new SDK.PluginProperty("check", "enable-chrome", true),
         new SDK.PluginProperty("check", "enable-dvr", false),
+        new SDK.PluginProperty("check", "loop", false),
+        new SDK.PluginProperty("integer", "start", 0),
       ]);
 
       SDK.Lang.PopContext(); // .properties

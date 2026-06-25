@@ -17,3 +17,4 @@ written so the plugin's skills can discover them.
 ## Decision Records
 
 - [decisions/0001-additive-v2-api-expansion.md](decisions/0001-additive-v2-api-expansion.md) — **inherited from the GCore upstream (historical).** Additive-only ACE expansion, construction-time rebuild discipline, and empirical verification mandate for the GCore v2 API conversion. Its "(issue #1)" refers to the upstream GCore repo, not this fork's issue #1 (the YouTube port epic).
+- [decisions/0002-playervars-mapping-constraints.md](decisions/0002-playervars-mapping-constraints.md) — playerVars wiring constraints from issue #3: mute ownership deferred to #4, append-only positional property contract (idx5/idx6 for loop/start; renumber in #7), origin scheme guard, modestbranding omitted, loop/start build-time-only.

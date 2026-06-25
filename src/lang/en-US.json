@@ -28,6 +28,14 @@
 					"enable-dvr": {
 						"name": "Enable DVR",
 						"desc": "Enable DVR mode (seekable live window). Sets playbackType: 'dvr' on the player config. Unverified against a live DVR stream — see docs/youtube-player-api.md A6."
+					},
+					"loop": {
+						"name": "Loop",
+						"desc": "Loop the video when it reaches the end. Applies when the player is built (set before the video URL); not changed live."
+					},
+					"start": {
+						"name": "Start time (seconds)",
+						"desc": "Start playback at this offset in seconds. Applies at player construction only."
 					}
 				},
 				"aceCategories": {

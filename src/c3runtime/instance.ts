@@ -20,6 +20,8 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 	_noLowLatency: boolean = false;
 	_enableChrome: boolean = true;
 	_enableDvr: boolean = false;
+	_loop: boolean = false;
+	_start: number = 0;
 	_fallbackUrls: string[] = [];
 	_subtitleSources: Array<{ url: string; language: string; label: string }> = [];
 	_isInitialized = false;
@@ -60,6 +62,10 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 			this._noLowLatency = (properties[2] ?? false) as boolean;
 			this._enableChrome = (properties[3] ?? true) as boolean;
 			this._enableDvr = (properties[4] ?? false) as boolean;
+			// NOTE (issue #7): when noLowLatency (idx2) and enableDvr (idx4) are
+			// removed, these idx5/idx6 reads must be renumbered to idx3/idx4.
+			this._loop = (properties[5] ?? false) as boolean;
+			this._start = (properties[6] ?? 0) as number;
 		}
 
 		this._createElement();
@@ -80,6 +86,8 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 			"noLowLatency": this._noLowLatency,
 			"enableChrome": this._enableChrome,
 			"enableDvr": this._enableDvr,
+			"loop": this._loop,
+			"start": this._start,
 			"fallbackUrls": this._fallbackUrls,
 			"subtitleSources": this._subtitleSources
 		};
@@ -411,6 +419,8 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 			"noLowLatency": this._noLowLatency,
 			"enableChrome": this._enableChrome,
 			"enableDvr": this._enableDvr,
+			"loop": this._loop,
+			"start": this._start,
 			"fallbackUrls": this._fallbackUrls,
 			"subtitleSources": this._subtitleSources
 		};
@@ -423,6 +433,8 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		this._noLowLatency = (o["noLowLatency"] ?? false) as boolean;
 		this._enableChrome = (o["enableChrome"] ?? true) as boolean;
 		this._enableDvr = (o["enableDvr"] ?? false) as boolean;
+		this._loop = (o["loop"] ?? false) as boolean;
+		this._start = (o["start"] ?? 0) as number;
 		this._fallbackUrls = (o["fallbackUrls"] ?? []) as string[];
 		this._subtitleSources = (o["subtitleSources"] ?? []) as Array<{ url: string; language: string; label: string }>;
 
@@ -442,6 +454,8 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 					{ name: prefix + "noLowLatency", value: this._noLowLatency, onedit: v => this._SetNoLowLatency(v as boolean) },
 					{ name: prefix + "enableChrome", value: this._enableChrome, onedit: v => this._SetEnableChrome(v as boolean) },
 					{ name: prefix + "enableDvr", value: this._enableDvr, onedit: v => this._SetEnableDVR(v as boolean) },
+					{ name: prefix + "loop", value: this._loop },
+					{ name: prefix + "start", value: this._start },
 					{ name: prefix + "fallbackUrls", value: this._fallbackUrls.length },
 					{ name: prefix + "subtitleSources", value: this._subtitleSources.length },
 					{ name: prefix + "playbackTime", value: this._currentPlaybackTime, onedit: v => this._SetPlaybackTime(v as number) },
