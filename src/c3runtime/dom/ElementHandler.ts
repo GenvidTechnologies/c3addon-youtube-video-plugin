@@ -396,6 +396,9 @@
     // Re-apply the user's audio intent to the player. Called when a player becomes
     // ready and on each video load — YouTube's onReady fires only once per player
     // construction, so subsequent loadVideoById calls must restore audio explicitly.
+    // Note: lastMuted/lastVolume hold the user's *intent* via the ACEs, so a mute
+    // the user makes through YouTube's native chrome is treated as transient — it
+    // is overridden by the stored intent on the next load.
     private RestoreAudioState() {
       if (!this.player) {
         return;
@@ -504,14 +507,17 @@
       console.log("[video player] Mute requested");
       this.lastMuted = true;
       this.player?.mute();
-      this.PostStateToRuntime({ audioState: "muted" });
+      // Post via PostAudioState so audioState and currentVolume always travel
+      // together — keeps GetCurrentVolume fresh after a mute/unmute, not just
+      // after the next playback poll.
+      this.PostAudioState();
     }
 
     OnUnmute() {
       console.log("[video player] Unmute requested");
       this.lastMuted = false;
       this.player?.unMute();
-      this.PostStateToRuntime({ audioState: "unmuted" });
+      this.PostAudioState();
     }
 
     OnSetQuality(state: JSONObject) {
