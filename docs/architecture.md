@@ -52,3 +52,39 @@ details through the runtime side — keep `ElementHandler.ts` the single seam.
 
 See [`youtube-player-api.md`](youtube-player-api.md) for the player API surface
 used by `ElementHandler.ts`.
+
+## Plugin properties: the positional contract
+
+Editor properties declared in `plugin.ts` reach the runtime in **declaration
+order**, and several sites depend on that order. A property added in the wrong
+place silently mis-reads every property after it — including in **already-saved
+Construct projects and savegames**. The flow:
+
+1. `plugin.ts` `SetProperties([...])` — an **ordered** array; the position of each
+   `SDK.PluginProperty` defines its index.
+2. `src/c3runtime/instance.ts` constructor — reads each property **positionally**
+   as `properties[N]` (the only index-based read).
+3. `instance.ts` `_getElementState()` / `_saveToJson()` / `_loadFromJson()` —
+   carry the same values **by key** (not position) across the message bridge and
+   in/out of savegames.
+4. `instance.ts` `_getDebuggerProperties()` — surfaces them in the debugger.
+
+Rules that follow:
+
+- **Append new properties at the end**, never insert or reorder. Inserting shifts
+  every later `properties[N]` index, so an existing project saved with the old
+  order is read incorrectly. The keyed `_loadFromJson` defaults missing keys, so
+  old savegames load cleanly only when the new property is *appended* (absent →
+  default), not inserted.
+- **Keep all sites in sync** — a new property touches `plugin.ts` (declare),
+  `instance.ts` (positional read + `_getElementState` + save/load + debugger),
+  and `src/lang/en-US.json` (a `properties` entry whose **key exactly matches the
+  property id** — a mismatch is a silent missing editor label).
+- **Removals must renumber in the same commit** — deleting a property (e.g.
+  retiring the GCore-only `no-low-latency`/`enable-dvr`) shifts the indices of
+  everything after it, so the `properties[N]` reads in `instance.ts` must be
+  renumbered together with the `SetProperties` removal.
+
+Property *values* stay API-agnostic across the bridge; only
+`ElementHandler.ts` maps them to YouTube specifics (e.g. `playerVars`), per the
+single-seam rule above.
