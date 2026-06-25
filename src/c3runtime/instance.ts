@@ -155,14 +155,14 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 				this._currentPlaybackTime = state.currentPlaybackTime as number;
 			}
 
+			// Store the reported volume. Mute-state is NOT inferred from volume — YouTube's
+			// getVolume() is independent of mute (a muted player still reports its level).
+			// `_audioState` is driven solely by the explicit `state.audioState` the DOM side
+			// posts (from isMuted()), handled above.
+			// Use !== undefined (not truthiness) so a legitimate 0 volume is stored, not
+			// dropped — that 0 is also what lets the player reach its ready/initialized state.
 			if (state.currentVolume !== undefined) {
-				const currentVolume = state.currentVolume as number;
-				if (currentVolume === 0) {
-					this._audioState = "muted";
-				} else if (currentVolume > 0) {
-					this._audioState = "unmuted";
-				}
-				this._currentVolume = currentVolume;
+				this._currentVolume = state.currentVolume as number;
 			}
 
 			if (state.duration !== undefined) {
