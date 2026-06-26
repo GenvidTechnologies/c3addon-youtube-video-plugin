@@ -11,7 +11,14 @@ Construct 3 plugins run code in two completely separate contexts:
 | File / location | Context | Runs when |
 |---|---|---|
 | `src/plugin.ts` | **Editor side** | In the Construct 3 editor (and at export time). Declares the plugin, its properties, ACEs, script dependencies, and which runtime scripts to load. **Does not run in the game.** |
+| `src/instance.ts` | **Editor side** | In the editor's layout view — the World instance that draws the placeholder (`Draw` / `_UpdateWebGLText`). Distinct from the runtime instance below. **Does not run in the game.** |
 | `src/c3runtime/**` | **Game (runtime) side** | In the exported/previewed game. |
+
+> **Two files named `instance.ts`.** `src/instance.ts` is the *editor-side* World
+> instance (placeholder rendering); `src/c3runtime/instance.ts` is the *runtime*
+> instance (plugin state + ACEs). When removing or renaming a symbol, grep the
+> **whole `src/` tree**, not just the runtime file — both can reference a feature
+> (e.g. a property id surfaced in the editor placeholder).
 
 So a call like `this._info.AddRemoteScriptDependency(url)` in `plugin.ts` is a
 *declaration* made in the editor: it instructs Construct to inject a `<script
