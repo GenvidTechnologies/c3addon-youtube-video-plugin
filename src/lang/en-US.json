@@ -17,10 +17,6 @@
 						"name": "Subtitles",
 						"desc": "The subtitles language for subtitles. \"off\" to turn them off."
 					},
-					"no-low-latency": {
-						"name": "No low latency flag",
-						"desc": "No low latency flag. Intended to be used by live stream."
-					},
 					"enable-chrome": {
 						"name": "Enable Chrome",
 						"desc": "Show the YouTube player control bar (player built-in UI). Off by default; hosts typically provide their own UI."
@@ -171,16 +167,12 @@
 					},
 					"set-url": {
 						"list-name": "Load Video",
-						"display-text": "Load video at {0} with no low latency flag {1}",
+						"display-text": "Load video at {0}",
 						"description": "Set the Video Player URL. Loading a video clears the current subtitle selection and any side-loaded subtitle sources; use Set Subtitles / Add Subtitle Source afterwards.",
 						"params": {
 							"url": {
 								"name": "URL",
 								"desc": "The URL to load"
-							},
-							"no-low-latency": {
-								"name": "No low latency flag",
-								"desc": "No low latency flag. Should be only used by live stream. 'true' to enable."
 							}
 						}
 					},
@@ -192,17 +184,6 @@
 							"language": {
 								"name": "Language",
 								"desc": "A language code for the subtitles, or \"off\" to turn them off."
-							}
-						}
-					},
-					"set-no-low-latency": {
-						"list-name": "Set No Low Latency",
-						"display-text": "Set no low latency flag to {0}",
-						"description": "Set no low latency flag for the video.",
-						"params": {
-							"noLowLatency": {
-								"name": "No Low Latency Flag",
-								"desc": "No low latency flag."
 							}
 						}
 					},
@@ -316,10 +297,6 @@
 						"description": "The subtitles languages for the video. \"off\" if turned off.",
 						"translated-name": "Subtitles"
 					},
-					"no-low-latency": {
-						"description": "The no low latency flag for the video.",
-						"translated-name": "NoLowLatency"
-					},
 					"get-enable-chrome": {
 						"description": "Whether the YouTube player control bar (player built-in UI) is enabled.",
 						"translated-name": "GetEnableChrome"
@@ -369,7 +346,6 @@
 					"title": "YouTube Video Player",
 					"url": "Base URL",
 					"subtitles": "Subtitles",
-					"noLowLatency": "Disable Low Latency",
 					"enableChrome": "Enable Chrome (Control Bar)",
 					"isInitialized": "Initialized",
 					"isReady": "Ready",

@@ -28,9 +28,6 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Exps =
 	Subtitles(this:SDKInstanceClass) {
 		return this._GetSubtitles();
 	},
-	NoLowLatency(this:SDKInstanceClass) {
-		return this._GetNoLowLatency();
-	},
 	GetEnableChrome(this:SDKInstanceClass) {
 		return this._GetEnableChrome();
 	},

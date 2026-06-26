@@ -17,7 +17,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 	
 	_url: string = "";
 	_subtitles: string = "";
-	_noLowLatency: boolean = false;
 	_enableChrome: boolean = true;
 	_enableDvr: boolean = false;
 	_loop: boolean = false;
@@ -58,13 +57,12 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		if (properties) {
 			this._url = (properties[0] ?? "") as string;
 			this._subtitles = (properties[1] ?? "off") as string;
-			this._noLowLatency = (properties[2] ?? false) as boolean;
-			this._enableChrome = (properties[3] ?? true) as boolean;
-			this._enableDvr = (properties[4] ?? false) as boolean;
-			// NOTE (issue #7): when noLowLatency (idx2) and enableDvr (idx4) are
-			// removed, these idx5/idx6 reads must be renumbered to idx3/idx4.
-			this._loop = (properties[5] ?? false) as boolean;
-			this._start = (properties[6] ?? 0) as number;
+			this._enableChrome = (properties[2] ?? true) as boolean;
+			this._enableDvr = (properties[3] ?? false) as boolean;
+			// NOTE (issue #7): low-latency is now removed. When enableDvr (idx3) is
+			// removed in the next task, loop and start must be renumbered to idx2/idx3.
+			this._loop = (properties[4] ?? false) as boolean;
+			this._start = (properties[5] ?? 0) as number;
 		}
 
 		this._createElement();
@@ -82,7 +80,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		return {
 			"url": this._url,
 			"subtitles": this._subtitles,
-			"noLowLatency": this._noLowLatency,
 			"enableChrome": this._enableChrome,
 			"enableDvr": this._enableDvr,
 			"loop": this._loop,
@@ -257,9 +254,8 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		};
 	}
 
-	_SetURL(url: string, noLowLatency: boolean) {
-		const urlChanged = this._url !== url;
-		if (!urlChanged && this._noLowLatency === noLowLatency) {
+	_SetURL(url: string) {
+		if (this._url === url) {
 			return;
 		}
 
@@ -268,15 +264,12 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		// and then calls UpdateState() in domSide.js with the state object, where the button text
 		// is applied to the DOM element.
 		this._url = url;
-		this._noLowLatency = noLowLatency;
-		if (urlChanged) {
-			// Loading a video starts with a clean subtitle slate: subtitles are no
-			// longer a SetURL parameter. Use SetSubtitles / AddSubtitleSource after
-			// loading. This also stops the previous video's subtitles (in-manifest
-			// selection and side-loaded sources) from leaking onto the new one.
-			this._subtitles = "off";
-			this._subtitleSources = [];
-		}
+		// Loading a video starts with a clean subtitle slate: subtitles are no
+		// longer a SetURL parameter. Use SetSubtitles / AddSubtitleSource after
+		// loading. This also stops the previous video's subtitles (in-manifest
+		// selection and side-loaded sources) from leaking onto the new one.
+		this._subtitles = "off";
+		this._subtitleSources = [];
 		this._updateElementState();
 	}
 
@@ -315,24 +308,9 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		return this._subtitles;
 	}
 
-	_SetNoLowLatency(noLowLatency?: boolean) {
-		// Only default when the arg is actually absent (nullish); an explicit
-		// false must be preserved — mirrors the _SetURL handling.
-		noLowLatency = noLowLatency ?? false;
-		if (this._noLowLatency === noLowLatency)
-			return;
-
-		this._noLowLatency = noLowLatency;
-		this._updateElementState();
-	}
-
-	_GetNoLowLatency() {
-		return this._noLowLatency ? 1 : 0;
-	}
-
 	_SetEnableChrome(enable?: boolean) {
 		// Only default when the arg is actually absent (nullish); an explicit
-		// false must be preserved — mirrors the _SetNoLowLatency handling.
+		// false must be preserved.
 		enable = enable ?? false;
 		if (this._enableChrome === enable)
 			return;
@@ -404,7 +382,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 			// data to be saved for savegames
 			"url": this._url,
 			"subtitles": this._subtitles,
-			"noLowLatency": this._noLowLatency,
 			"enableChrome": this._enableChrome,
 			"enableDvr": this._enableDvr,
 			"loop": this._loop,
@@ -417,7 +394,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		// load state for savegames
 		this._url = (o["url"] ?? "") as string;
 		this._subtitles = (o["subtitles"] ?? "off") as string;
-		this._noLowLatency = (o["noLowLatency"] ?? false) as boolean;
 		this._enableChrome = (o["enableChrome"] ?? true) as boolean;
 		this._enableDvr = (o["enableDvr"] ?? false) as boolean;
 		this._loop = (o["loop"] ?? false) as boolean;
@@ -435,9 +411,8 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 				properties: [
 					{ name: prefix + "isInitialized", value: this._isInitialized },
 					{ name: prefix + "isReady", value: this._isReady },
-					{ name: prefix + "url", value: this._url, onedit: v => this._SetURL(v as string, this._noLowLatency) },
+					{ name: prefix + "url", value: this._url, onedit: v => this._SetURL(v as string) },
 					{ name: prefix + "subtitles", value: this._subtitles, onedit: v => this._SetSubtitles(v as string) },
-					{ name: prefix + "noLowLatency", value: this._noLowLatency, onedit: v => this._SetNoLowLatency(v as boolean) },
 					{ name: prefix + "enableChrome", value: this._enableChrome, onedit: v => this._SetEnableChrome(v as boolean) },
 					{ name: prefix + "enableDvr", value: this._enableDvr, onedit: v => this._SetEnableDVR(v as boolean) },
 					{ name: prefix + "loop", value: this._loop },

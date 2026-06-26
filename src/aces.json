@@ -120,10 +120,6 @@
 					{
 						"id": "url",
 						"type": "string"
-					},
-					{
-						"id": "no-low-latency",
-						"type": "boolean"
 					}
 				]
 			},
@@ -134,16 +130,6 @@
 					{
 						"id": "language",
 						"type": "string"
-					}
-				]
-			},
-			{
-				"id": "set-no-low-latency",
-				"scriptName": "SetNoLowLatency",
-				"params": [
-					{
-						"id": "noLowLatency",
-						"type": "boolean"
 					}
 				]
 			},
@@ -259,11 +245,6 @@
 				"id": "subtitles",
 				"expressionName": "Subtitles",
 				"returnType": "string"
-			},
-			{
-				"id": "no-low-latency",
-				"expressionName": "NoLowLatency",
-				"returnType": "number"
 			},
 			{
 				"id": "get-enable-chrome",
