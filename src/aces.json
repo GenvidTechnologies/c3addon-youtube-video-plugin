@@ -168,16 +168,6 @@
 				]
 			},
 			{
-				"id": "set-fallback-urls",
-				"scriptName": "SetFallbackURLs",
-				"params": [
-					{
-						"id": "urls",
-						"type": "string"
-					}
-				]
-			},
-			{
 				"id": "add-subtitle-source",
 				"scriptName": "AddSubtitleSource",
 				"params": [

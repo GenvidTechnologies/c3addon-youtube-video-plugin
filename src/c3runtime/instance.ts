@@ -22,7 +22,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 	_enableDvr: boolean = false;
 	_loop: boolean = false;
 	_start: number = 0;
-	_fallbackUrls: string[] = [];
 	_subtitleSources: Array<{ url: string; language: string; label: string }> = [];
 	_isInitialized = false;
 	_isReady = false;
@@ -88,7 +87,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 			"enableDvr": this._enableDvr,
 			"loop": this._loop,
 			"start": this._start,
-			"fallbackUrls": this._fallbackUrls,
 			"subtitleSources": this._subtitleSources
 		};
 	}
@@ -304,16 +302,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		this._AddSubtitleSource(url, language, label);
 	}
 
-	_SetFallbackURLs(urls: string) {
-		const parsed = urls.split(/[,\n]/).map(s => s.trim()).filter(Boolean);
-		// Only update and trigger a state refresh if the list actually changed.
-		if (JSON.stringify(parsed) === JSON.stringify(this._fallbackUrls)) {
-			return;
-		}
-		this._fallbackUrls = parsed;
-		this._updateElementState();
-	}
-
 	_SetSubtitles(language?: string) {
 		language = language || "off";
 		if (this._subtitles === language)
@@ -421,7 +409,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 			"enableDvr": this._enableDvr,
 			"loop": this._loop,
 			"start": this._start,
-			"fallbackUrls": this._fallbackUrls,
 			"subtitleSources": this._subtitleSources
 		};
 	}
@@ -435,7 +422,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		this._enableDvr = (o["enableDvr"] ?? false) as boolean;
 		this._loop = (o["loop"] ?? false) as boolean;
 		this._start = (o["start"] ?? 0) as number;
-		this._fallbackUrls = (o["fallbackUrls"] ?? []) as string[];
 		this._subtitleSources = (o["subtitleSources"] ?? []) as Array<{ url: string; language: string; label: string }>;
 
 		this._updateElementState();		// ensures any state changes are updated in the DOM
@@ -456,7 +442,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 					{ name: prefix + "enableDvr", value: this._enableDvr, onedit: v => this._SetEnableDVR(v as boolean) },
 					{ name: prefix + "loop", value: this._loop },
 					{ name: prefix + "start", value: this._start },
-					{ name: prefix + "fallbackUrls", value: this._fallbackUrls.length },
 					{ name: prefix + "subtitleSources", value: this._subtitleSources.length },
 					{ name: prefix + "playbackTime", value: this._currentPlaybackTime, onedit: v => this._SetPlaybackTime(v as number) },
 					{ name: prefix + "volume", value: this._currentVolume, onedit: v => this._SetVolume(v as number) },

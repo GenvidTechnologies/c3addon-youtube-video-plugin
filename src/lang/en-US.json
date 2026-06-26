@@ -228,17 +228,6 @@
 							}
 						}
 					},
-					"set-fallback-urls": {
-						"list-name": "Set Fallback URLs",
-						"display-text": "Set fallback source URLs to {0}",
-						"description": "Set a comma- or newline-separated list of fallback source URLs. The player will try these in order if the primary URL is unreachable.",
-						"params": {
-							"urls": {
-								"name": "URLs",
-								"desc": "Comma- or newline-separated list of fallback source URLs."
-							}
-						}
-					},
 					"add-subtitle-source": {
 						"list-name": "Add Subtitle Source",
 						"display-text": "Add subtitle source {0} (language {1}, label {2})",
@@ -393,7 +382,6 @@
 					"lastErrorMessage": "Last Error Message",
 					"currentQuality": "Current Quality Level",
 					"qualityCount": "Quality Level Count",
-					"fallbackUrls": "Fallback URL Count",
 					"subtitleSources": "External Subtitle Source Count",
 					"enableDvr": "Enable DVR",
 					"isDvr": "Is DVR Stream",

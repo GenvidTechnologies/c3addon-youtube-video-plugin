@@ -238,7 +238,7 @@
       this.loop = (e["loop"] ?? false) as boolean;
       this.start = (e["start"] ?? 0) as number;
       // TODO(youtube): map the remaining incoming state — subtitles selection,
-      // quality, fallback URLs, DVR/live flags — onto YouTube IFrame player
+      // quality, DVR/live flags — onto YouTube IFrame player
       // options. Tracked in the repo's GitHub issues.
 
       if (this.currentUrl === url) {
