@@ -28,9 +28,6 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Exps =
 	Subtitles(this:SDKInstanceClass) {
 		return this._GetSubtitles();
 	},
-	NoLowLatency(this:SDKInstanceClass) {
-		return this._GetNoLowLatency();
-	},
 	GetEnableChrome(this:SDKInstanceClass) {
 		return this._GetEnableChrome();
 	},
@@ -39,12 +36,6 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Exps =
 	},
 	GetQualityCount(this:SDKInstanceClass) {
 		return this._qualityCount;
-	},
-	GetSeekableStart(this:SDKInstanceClass) {
-		return this._GetSeekableStart();
-	},
-	GetSeekableEnd(this:SDKInstanceClass) {
-		return this._GetSeekableEnd();
 	},
 	GetSubtitleCount(this:SDKInstanceClass) {
 		return this._GetSubtitleCount();

@@ -40,9 +40,9 @@ PLUGIN_CLASS.Instance = class YouTubeVideoInstance extends SDK.IWorldInstanceBas
 		const textZoom = iLayoutView.GetZoomFactor();
 		this._webglText.SetSize(this._inst.GetWidth(), this._inst.GetHeight(), textZoom);
 
-		// Show the raw video URL as the editor placeholder. Subtitles and
-		// low-latency are handled via the v2 player API at runtime, not URL
-		// query params, so they are not appended here.
+		// Show the raw video URL as the editor placeholder. Subtitles are
+		// handled via the v2 player API at runtime, not URL query params, so
+		// they are not appended here.
 		const url = this._inst.GetPropertyValue("video-url") as string;
 
 		this._webglText.SetText(url);

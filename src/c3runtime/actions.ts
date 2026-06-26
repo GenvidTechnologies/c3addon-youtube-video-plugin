@@ -18,23 +18,17 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Acts = {
 	SetVolume(this:SDKInstanceClass, level: number) {
 		this._SetVolume(level);
 	},
-	SetURL(this:SDKInstanceClass, url: string, noLowLatency: boolean) {
-		this._SetURL(url, noLowLatency);
+	SetURL(this:SDKInstanceClass, url: string) {
+		this._SetURL(url);
 	},
 	SetSubtitles(this:SDKInstanceClass, language: string) {
 		this._SetSubtitles(language);
-	},
-	SetNoLowLatency(this:SDKInstanceClass, noLowLatency: boolean) {
-		this._SetNoLowLatency(noLowLatency);
 	},
 	SetQuality(this:SDKInstanceClass, level: number) {
 		this._SetQuality(level);
 	},
 	SetEnableChrome(this:SDKInstanceClass, enable: boolean) {
 		this._SetEnableChrome(enable);
-	},
-	SetFallbackURLs(this:SDKInstanceClass, urls: string) {
-		this._SetFallbackURLs(urls);
 	},
 	AddSubtitleSource(this:SDKInstanceClass, url: string, language: string, label: string) {
 		this._AddSubtitleSource(url, language, label);
@@ -46,8 +40,5 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Acts = {
 	},
 	Resize(this: SDKInstanceClass) {
 		this._Resize();
-	},
-	SetEnableDVR(this: SDKInstanceClass, enable: boolean) {
-		this._SetEnableDVR(enable);
 	}
 };
