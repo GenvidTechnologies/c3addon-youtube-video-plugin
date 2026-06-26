@@ -74,7 +74,7 @@ is `modestbranding` truly a no-op in current YouTube) is deferred to issue #10
 ## Methods (control)
 
 `playVideo()`, `pauseVideo()`, `seekTo(seconds, allowSeekAhead)`, `mute()`,
-`unMute()`, `setVolume(0..100)`, `getVolume()`, `getDuration()`,
+`unMute()`, `isMuted()`, `setVolume(0..100)`, `getVolume()`, `getDuration()`,
 `getCurrentTime()`, `setSize(width, height)`, `loadVideoById(id)`, `destroy()`.
 
 ## Open questions / TODO
@@ -88,6 +88,17 @@ These map to the development-task issues:
   polled while playing (YouTube has no `timeupdate` event). `onError` maps the YT
   error codes to readable messages. Still open: quality/captions/DVR/subtitle
   fields (see the bullets below and their issues).
+- **Audio lifecycle.** *Done (#4).* `lastVolume`/`lastMuted` (the user's intent via
+  the ACEs) are restored on `onReady` and re-applied on each `loadVideoById` (which
+  does not re-fire `onReady`); the autoplay forced-mute is reconciled by unmuting on
+  the `PLAYING` event when the user's intent was unmuted; `currentVolume`/`audioState`
+  are posted after set-calls and in the playback poll. Mute-state is decoupled from
+  volume — the DOM seam is authoritative for `audioState` (from `isMuted()`) and the
+  runtime no longer infers mute from `getVolume()`; see
+  [decisions/0003-mute-state-decoupled-from-volume.md](decisions/0003-mute-state-decoupled-from-volume.md).
+  Empirical verification that the browser autoplay policy actually permits the
+  unmute-on-`PLAYING` (without a user gesture) is deferred to the test harness (#10)
+  and sample project (#9).
 - **playerVars mapping.** *Done (#3).* All initial playerVars are wired; see the
   table above. Empirical verification of `loop`/`modestbranding` behavior deferred
   to issue #10.

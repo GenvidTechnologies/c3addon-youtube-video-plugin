@@ -284,9 +284,10 @@
       if (this.player) {
         // NOTE: loop/start (and other playerVars) apply only at YT.Player construction;
         // they are NOT re-applied on loadVideoById — a rebuild is required.
-        // TODO(youtube): cueVideoById vs loadVideoById (autoplay policy), and
-        // re-apply audio/subtitle/quality state. Tracked in GitHub issues.
         this.player.loadVideoById(videoId);
+        // onReady fires only once per player, so re-apply the user's audio intent here.
+        this.RestoreAudioState();
+        this.PostAudioState();
         return;
       }
 
@@ -303,17 +304,21 @@
           onReady: (ev: YTPlayerEvent) => {
             console.log("[video player] YouTube player ready");
             const player = ev.target;
-            this.PostStateToRuntime({
-              duration: player.getDuration(),
-              currentVolume: player.getVolume() / 100,
-              audioState: player.isMuted() ? "muted" : "unmuted",
-            });
+            this.RestoreAudioState();
+            this.PostStateToRuntime({ duration: player.getDuration() });
+            this.PostAudioState();
           },
           onStateChange: (ev: YTPlayerEvent) => {
             const PS = YT.PlayerState;
             switch (ev.data) {
               case PS.PLAYING:
                 this.PostStateToRuntime({ playerState: "playing" });
+                // Autoplay may have force-muted us; if the user's intent was unmuted,
+                // unmute now that playback has actually started.
+                if (!this.lastMuted && this.player?.isMuted()) {
+                  this.player.unMute();
+                }
+                this.PostAudioState();
                 this.StartPlaybackPolling();
                 break;
               case PS.PAUSED:
@@ -388,6 +393,40 @@
       }
     }
 
+    // Re-apply the user's audio intent to the player. Called when a player becomes
+    // ready and on each video load — YouTube's onReady fires only once per player
+    // construction, so subsequent loadVideoById calls must restore audio explicitly.
+    // Note: lastMuted/lastVolume hold the user's *intent* via the ACEs, so a mute
+    // the user makes through YouTube's native chrome is treated as transient — it
+    // is overridden by the stored intent on the next load.
+    private RestoreAudioState() {
+      if (!this.player) {
+        return;
+      }
+      // lastVolume is 0..1; -1 means "never set" — leave the player default then.
+      if (this.lastVolume >= 0) {
+        this.player.setVolume(this.lastVolume * 100);
+      }
+      if (this.lastMuted) {
+        this.player.mute();
+      } else {
+        this.player.unMute();
+      }
+    }
+
+    // Post the player's current audio readout. The DOM side is authoritative for
+    // audioState (the runtime no longer infers mute from volume) — YouTube's
+    // getVolume() is independent of mute, so always send both together.
+    private PostAudioState() {
+      if (!this.player) {
+        return;
+      }
+      this.PostStateToRuntime({
+        currentVolume: this.player.getVolume() / 100,
+        audioState: this.player.isMuted() ? "muted" : "unmuted",
+      });
+    }
+
     StartPlaybackPolling() {
       if (this.playbackTimer !== null) {
         return;
@@ -396,7 +435,11 @@
       // playing. 250ms (~4 updates/sec) keeps the readout smooth without churn.
       this.playbackTimer = globalThis.setInterval(() => {
         if (this.player) {
-          this.PostStateToRuntime({ currentPlaybackTime: this.player.getCurrentTime() });
+          this.PostStateToRuntime({
+            currentPlaybackTime: this.player.getCurrentTime(),
+            currentVolume: this.player.getVolume() / 100,
+            audioState: this.player.isMuted() ? "muted" : "unmuted",
+          });
         }
       }, 250);
     }
@@ -456,6 +499,7 @@
         this.lastVolume = volume;
         // YouTube API volume is 0..100.
         this.player?.setVolume(volume * 100);
+        this.PostAudioState();
       }
     }
 
@@ -463,14 +507,17 @@
       console.log("[video player] Mute requested");
       this.lastMuted = true;
       this.player?.mute();
-      this.PostStateToRuntime({ audioState: "muted" });
+      // Post via PostAudioState so audioState and currentVolume always travel
+      // together — keeps GetCurrentVolume fresh after a mute/unmute, not just
+      // after the next playback poll.
+      this.PostAudioState();
     }
 
     OnUnmute() {
       console.log("[video player] Unmute requested");
       this.lastMuted = false;
       this.player?.unMute();
-      this.PostStateToRuntime({ audioState: "unmuted" });
+      this.PostAudioState();
     }
 
     OnSetQuality(state: JSONObject) {
