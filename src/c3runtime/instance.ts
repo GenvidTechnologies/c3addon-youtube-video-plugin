@@ -18,7 +18,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 	_url: string = "";
 	_subtitles: string = "";
 	_enableChrome: boolean = true;
-	_enableDvr: boolean = false;
 	_loop: boolean = false;
 	_start: number = 0;
 	_subtitleSources: Array<{ url: string; language: string; label: string }> = [];
@@ -30,11 +29,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 	_duration = -1;
 	_currentQuality = -1;
 	_qualityCount = 0;
-
-	// DVR readout state — per-video; reset in _InitializeState.
-	_isDvr: boolean = false;
-	_seekableStart: number = 0;
-	_seekableEnd: number = -1;
 
 	// Subtitle track list — per-video; reset in _InitializeState.
 	_subtitleTracks: Array<{ language: string; label: string }> = [];
@@ -58,11 +52,8 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 			this._url = (properties[0] ?? "") as string;
 			this._subtitles = (properties[1] ?? "off") as string;
 			this._enableChrome = (properties[2] ?? true) as boolean;
-			this._enableDvr = (properties[3] ?? false) as boolean;
-			// NOTE (issue #7): low-latency is now removed. When enableDvr (idx3) is
-			// removed in the next task, loop and start must be renumbered to idx2/idx3.
-			this._loop = (properties[4] ?? false) as boolean;
-			this._start = (properties[5] ?? 0) as number;
+			this._loop = (properties[3] ?? false) as boolean;
+			this._start = (properties[4] ?? 0) as number;
 		}
 
 		this._createElement();
@@ -81,7 +72,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 			"url": this._url,
 			"subtitles": this._subtitles,
 			"enableChrome": this._enableChrome,
-			"enableDvr": this._enableDvr,
 			"loop": this._loop,
 			"start": this._start,
 			"subtitleSources": this._subtitleSources
@@ -99,11 +89,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		this._duration = -1;
 		this._currentQuality = -1;
 		this._qualityCount = 0;
-
-		// Reset DVR readout — per-video, like currentQuality.
-		this._isDvr = false;
-		this._seekableStart = 0;
-		this._seekableEnd = -1;
 
 		// Reset subtitle track list — per-video, like currentQuality.
 		this._subtitleTracks = [];
@@ -170,20 +155,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 
 			if (state.qualityCount !== undefined) {
 				this._qualityCount = state.qualityCount as number;
-			}
-
-			// DVR readout — posted from ElementHandler when the DVR window is known.
-			// Use !== undefined so a legitimate false/0 is stored rather than dropped.
-			if (state.isDvr !== undefined) {
-				this._isDvr = state.isDvr as boolean;
-			}
-
-			if (state.seekableStart !== undefined) {
-				this._seekableStart = state.seekableStart as number;
-			}
-
-			if (state.seekableEnd !== undefined) {
-				this._seekableEnd = state.seekableEnd as number;
 			}
 
 			// Subtitle track list — only sent by the DOM side when it changed.
@@ -323,33 +294,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		return this._enableChrome ? 1 : 0;
 	}
 
-	_SetEnableDVR(enable?: boolean) {
-		// Only default when the arg is actually absent (nullish); an explicit
-		// false must be preserved — mirrors the _SetEnableChrome handling.
-		enable = enable ?? false;
-		if (this._enableDvr === enable)
-			return;
-
-		this._enableDvr = enable;
-		this._updateElementState();
-	}
-
-	_GetEnableDVR() {
-		return this._enableDvr ? 1 : 0;
-	}
-
-	_GetSeekableStart() {
-		return this._seekableStart;
-	}
-
-	_GetSeekableEnd() {
-		return this._seekableEnd;
-	}
-
-	_IsDVR() {
-		return this._isDvr;
-	}
-
 	_HasSubtitles() {
 		return this._subtitleTracks.length > 0;
 	}
@@ -383,7 +327,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 			"url": this._url,
 			"subtitles": this._subtitles,
 			"enableChrome": this._enableChrome,
-			"enableDvr": this._enableDvr,
 			"loop": this._loop,
 			"start": this._start,
 			"subtitleSources": this._subtitleSources
@@ -395,7 +338,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		this._url = (o["url"] ?? "") as string;
 		this._subtitles = (o["subtitles"] ?? "off") as string;
 		this._enableChrome = (o["enableChrome"] ?? true) as boolean;
-		this._enableDvr = (o["enableDvr"] ?? false) as boolean;
 		this._loop = (o["loop"] ?? false) as boolean;
 		this._start = (o["start"] ?? 0) as number;
 		this._subtitleSources = (o["subtitleSources"] ?? []) as Array<{ url: string; language: string; label: string }>;
@@ -414,7 +356,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 					{ name: prefix + "url", value: this._url, onedit: v => this._SetURL(v as string) },
 					{ name: prefix + "subtitles", value: this._subtitles, onedit: v => this._SetSubtitles(v as string) },
 					{ name: prefix + "enableChrome", value: this._enableChrome, onedit: v => this._SetEnableChrome(v as boolean) },
-					{ name: prefix + "enableDvr", value: this._enableDvr, onedit: v => this._SetEnableDVR(v as boolean) },
 					{ name: prefix + "loop", value: this._loop },
 					{ name: prefix + "start", value: this._start },
 					{ name: prefix + "subtitleSources", value: this._subtitleSources.length },
@@ -427,9 +368,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 					{ name: prefix + "lastErrorMessage", value: this._lastError.message as string },
 					{ name: prefix + "currentQuality", value: this._currentQuality, onedit: v => this._SetQuality(v as number) },
 					{ name: prefix + "qualityCount", value: this._qualityCount },
-					{ name: prefix + "isDvr", value: this._isDvr },
-					{ name: prefix + "seekableStart", value: this._seekableStart },
-					{ name: prefix + "seekableEnd", value: this._seekableEnd },
 					{ name: prefix + "subtitleTracks", value: this._subtitleTracks.length }
 				]
 			},

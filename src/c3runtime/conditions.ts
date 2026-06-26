@@ -31,9 +31,6 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Cnds =
 	IsMuted(this: SDKInstanceClass) {
 		return this._audioState === "muted";
 	},
-	IsDVR(this: SDKInstanceClass) {
-		return this._IsDVR();
-	},
 	HasSubtitles(this: SDKInstanceClass) {
 		return this._HasSubtitles();
 	},

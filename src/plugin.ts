@@ -70,7 +70,6 @@ const PLUGIN_CLASS =
         new SDK.PluginProperty("text", "video-url", ""),
         new SDK.PluginProperty("text", "video-subtitles", "off"),
         new SDK.PluginProperty("check", "enable-chrome", true),
-        new SDK.PluginProperty("check", "enable-dvr", false),
         new SDK.PluginProperty("check", "loop", false),
         new SDK.PluginProperty("integer", "start", 0),
       ]);

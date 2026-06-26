@@ -40,8 +40,5 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Acts = {
 	},
 	Resize(this: SDKInstanceClass) {
 		this._Resize();
-	},
-	SetEnableDVR(this: SDKInstanceClass, enable: boolean) {
-		this._SetEnableDVR(enable);
 	}
 };
