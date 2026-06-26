@@ -7,7 +7,7 @@
 			"genvidtech_youtubevideoplugin": {
 				"name": "YouTube Video Plugin",
 				"description": "YouTube Video Plugin integration by Genvid Technologies",
-				"help-url": "https://github.com/genvid-holdings/c3addon-youtube-video-plugin",
+				"help-url": "https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin",
 				"properties": {
 					"video-url": {
 						"name": "URL",

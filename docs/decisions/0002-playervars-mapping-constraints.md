@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-06-25
-- **Issue:** [genvid-holdings/c3addon-youtube-video-plugin#3](https://github.com/genvid-holdings/c3addon-youtube-video-plugin/issues/3)
+- **Issue:** [GenvidTechnologies/c3addon-youtube-video-plugin#3](https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin/issues/3)
 
 ## Context
 

@@ -7,8 +7,8 @@
 	"id": "Genvidtech_YouTubeVideoPlugin",
 	"version": "2.0.0.0",
 	"author": "Genvid Technologies, LLC",
-	"website": "https://github.com/genvid-holdings/c3addon-youtube-video-plugin",
-	"documentation": "https://github.com/genvid-holdings/c3addon-youtube-video-plugin",
+	"website": "https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin",
+	"documentation": "https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin",
 	"description": "YouTube Video Player integration by Genvid Technologies.",
 	"editor-scripts": [
 		"plugin.js",

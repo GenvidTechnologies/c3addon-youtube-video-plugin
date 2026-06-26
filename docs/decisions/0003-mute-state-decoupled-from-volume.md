@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-06-25
-- **Issue:** [genvid-holdings/c3addon-youtube-video-plugin#4](https://github.com/genvid-holdings/c3addon-youtube-video-plugin/issues/4) (part of epic [#1](https://github.com/genvid-holdings/c3addon-youtube-video-plugin/issues/1) — the GCore→YouTube port)
+- **Issue:** [GenvidTechnologies/c3addon-youtube-video-plugin#4](https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin/issues/4) (part of epic [#1](https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin/issues/1) — the GCore→YouTube port)
 
 ## Context
 
