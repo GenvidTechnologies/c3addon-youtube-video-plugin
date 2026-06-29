@@ -102,6 +102,15 @@ These map to the development-task issues:
 - **playerVars mapping.** *Done (#3).* All initial playerVars are wired; see the
   table above. Empirical verification of `loop`/`modestbranding` behavior deferred
   to issue #10.
+- **Awaitable Load Video (#18).** Upstream GCore made the `set-url` ACE awaitable,
+  resolving the load promise at GCore's per-load `Ready` event so post-load
+  settings (subtitles / quality / seek) don't race the async load. **That contract
+  does not port directly:** YouTube's `onReady` fires once at player creation and
+  does **not** re-fire on the `loadVideoById` reuse path (see "Audio lifecycle"
+  above), so a YouTube awaitable-load must settle on a different per-load signal —
+  likely an `onStateChange` transition (e.g. to `CUED`/`PLAYING`) after the load.
+  *Hypothesis, not yet verified empirically* — pin down the actual signal with the
+  test harness before implementing. Tracked in issue #18.
 - **URL → video id.** `extractVideoId()` handles `watch?v=`, `youtu.be/`,
   `/embed/`, `/shorts/`, `/v/`, and bare ids. Confirm the set of inputs Construct
   authors will actually paste.

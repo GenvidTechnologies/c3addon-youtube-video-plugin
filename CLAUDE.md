@@ -82,3 +82,27 @@ is set (`gh repo set-default GenvidTechnologies/c3addon-youtube-video-plugin`); 
 `gh` call ever hits the wrong repo, re-run that, or pass
 `-R GenvidTechnologies/c3addon-youtube-video-plugin` explicitly. Pull GCore changes
 to cherry-pick with `git fetch upstream`.
+
+### Syncing upstream changes
+
+When asked whether an upstream (GCore) update is relevant, triage the delta from
+the fork point rather than eyeballing tags:
+
+```
+git fetch upstream
+git merge-base HEAD upstream/main          # the fork point
+git log <merge-base>..upstream/main        # commits we don't have
+```
+
+Then classify each commit (this fork has diverged — most are not clean
+cherry-picks):
+
+- **CI / infra / tooling** (workflow bumps, lockfile, build scripts) → usually
+  port cleanly. (e.g. upstream #10 actions-v5 → our PR #19.)
+- **GCore release / version bumps** (`package.json`, `src/addon.json`) → **skip**;
+  the fork has its own identity and version line.
+- **Player-API features / fixes** → relevant *in principle* (the underlying bug
+  often exists here too), but **not** a clean cherry-pick: the GCore player API
+  differs from the YouTube IFrame API, so adapt the behavior empirically (per
+  "Debugging the player") and **file a tracked issue** instead of an ad-hoc port.
+  (e.g. upstream #8 awaitable Load Video → our issue #18.)
