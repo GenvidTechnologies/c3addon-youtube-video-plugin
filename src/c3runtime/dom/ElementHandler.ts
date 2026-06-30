@@ -161,6 +161,16 @@
     resizeObserver: ResizeObserver | null;
     playbackTimer: number | null;
     controller: AbortController;
+    // Awaitable-load state. The load promise resolves once the new video's
+    // metadata is loaded (getDuration() > 0) for the most-recently-requested
+    // load, or settles on error / timeout / supersession / Destroy. Readiness is
+    // POLLED from getDuration(), not derived from a play state: YouTube's onReady
+    // fires only once per player (not per loadVideoById), and PLAYING may never
+    // fire when autoplay is blocked. See ADR-0005 / issue #18.
+    loadReadyResolve: ((v: JSONValue) => void) | null;
+    loadGen: number;
+    loadReadyTimer: number | null;
+    loadReadyPoll: number | null;
 
     constructor(
       element: HTMLElement,
@@ -182,6 +192,10 @@
       this.resizeObserver = null;
       this.playbackTimer = null;
       this.controller = new AbortController();
+      this.loadReadyResolve = null;
+      this.loadGen = 0;
+      this.loadReadyTimer = null;
+      this.loadReadyPoll = null;
 
       this.Setup();
     }
@@ -230,7 +244,37 @@
       this.PostToRuntime("error", { error: { category, message } });
     }
 
-    UpdateState(e: JSONObject) {
+    // Settle the pending awaitable-load promise (generation-guarded). Called from
+    // the readiness poll (getDuration() > 0), the error path, the 15s timeout,
+    // and Destroy. A stale load's late settle (generation mismatch) is a safe
+    // no-op via the guard.
+    private _settleLoadPromise(gen: number): void {
+      if (this.loadGen !== gen) {
+        return;
+      }
+      this._clearLoadWaiters();
+      const resolve = this.loadReadyResolve;
+      this.loadReadyResolve = null;
+      resolve?.(null);
+    }
+
+    // Stop the readiness poll and timeout for the current pending load (without
+    // resolving). Shared by _settleLoadPromise, supersession, and Destroy.
+    private _clearLoadWaiters(): void {
+      if (this.loadReadyTimer !== null) {
+        globalThis.clearTimeout(this.loadReadyTimer);
+        this.loadReadyTimer = null;
+      }
+      if (this.loadReadyPoll !== null) {
+        globalThis.clearInterval(this.loadReadyPoll);
+        this.loadReadyPoll = null;
+      }
+    }
+
+    // Returns whether a rebuild load was kicked off (so OnLoadVideo knows to await
+    // metadata readiness). false for an unchanged URL or an offline (empty id)
+    // transition — nothing further will signal readiness.
+    UpdateState(e: JSONObject): boolean {
       const url = (e["url"] ?? "") as string;
       this.subtitleLang = (e["subtitles"] ?? "off") as string;
       this.enableChrome = (e["enableChrome"] ?? true) as boolean;
@@ -243,7 +287,7 @@
         // URL unchanged — apply lightweight changes (e.g. chrome/controls) to
         // the existing player without rebuilding it.
         // TODO(youtube): apply live chrome/subtitle changes here.
-        return;
+        return false;
       }
 
       this.currentUrl = url;
@@ -254,21 +298,27 @@
         console.debug("[video player] No YouTube video id in URL; going offline");
         this.DestroyPlayer();
         this.PostStateToRuntime({ playerState: "offline" });
-        return;
+        return false;
       }
 
       console.debug("[video player] Loading YouTube video", videoId);
       this.PostStateToRuntime({ playerState: "loading" });
       this.CreatePlayer(videoId);
+      return true;
     }
 
     async CreatePlayer(videoId: string) {
+      // Capture the load generation so a failure settles only this load's
+      // awaitable (a newer load will have advanced loadGen).
+      const myGen = this.loadGen;
+
       let YT: YTNamespace;
       try {
         YT = await loadYouTubeAPI();
       } catch (err) {
         console.error("[video player] Failed to load YouTube IFrame API", err);
         this.PostErrorToRuntime("youtube", `Failed to load player: ${err}`);
+        this._settleLoadPromise(myGen);
         return;
       }
 
@@ -341,6 +391,15 @@
             const code = ev.data ?? -1;
             const message = YT_ERROR_MESSAGES[code] ?? `YouTube player error ${code}`;
             this.PostErrorToRuntime("youtube", message);
+            // A load that errors must settle its awaitable so the event sheet
+            // doesn't wait out the 15s timeout. Use the CURRENT loadGen (not a
+            // captured one): this callback is registered once on the single
+            // per-instance player and reused across loadVideoById reuse loads, so
+            // an error always pertains to the load currently in flight. Capturing
+            // a generation here would bind it to the first load and wrongly skip
+            // settling every reuse-load error. (Poll/timeout differ — they are
+            // created fresh per load, so they capture myGen.) See ADR-0005 §4.
+            this._settleLoadPromise(this.loadGen);
           },
         },
       });
@@ -464,11 +523,67 @@
     }
 
     Destroy() {
+      // Settle any pending load so a destroyed element never hangs an awaiting
+      // action.
+      this._clearLoadWaiters();
+      const resolve = this.loadReadyResolve;
+      this.loadReadyResolve = null;
+      resolve?.(null);
       // Remove event listeners.
       this.controller.abort();
       this.currentUrl = "";
       this.currentVideoId = "";
       this.DestroyPlayer();
+    }
+
+    // Awaitable form of Load Video. Returns a promise that resolves to null once
+    // the new video's metadata is loaded (getDuration() > 0) for this load, or
+    // settles on error / 15s timeout / supersession / Destroy. "Resolved" means
+    // the load attempt is done, not that it succeeded — branch via On error /
+    // Is ready. Readiness is polled, not taken from a play state (see the
+    // loadReadyResolve field note and ADR-0005 / issue #18).
+    OnLoadVideo(data: JSONObject): Promise<JSONValue> {
+      // Supersede any pending load promise from a previous Load Video so the
+      // prior awaiter is not left hanging.
+      this._clearLoadWaiters();
+      const prevResolve = this.loadReadyResolve;
+      this.loadReadyResolve = null;
+      prevResolve?.(null);
+
+      const myGen = ++this.loadGen;
+      const willLoad = this.UpdateState(data);
+      if (!willLoad) {
+        // Unchanged URL or offline transition — nothing to await.
+        return Promise.resolve(null);
+      }
+
+      // On player reuse, loadVideoById briefly still reports the OLD video's
+      // duration before resetting to 0; require we first observe the reset (or a
+      // fresh player with no duration yet) before accepting duration > 0, so a
+      // stale duration can't resolve the new load early.
+      let sawReset = false;
+      return new Promise<JSONValue>((resolve) => {
+        this.loadReadyResolve = resolve;
+        this.loadReadyPoll = globalThis.setInterval(() => {
+          if (this.loadGen !== myGen) {
+            return; // superseded
+          }
+          const duration = this.player?.getDuration() ?? 0;
+          if (!sawReset) {
+            if (duration === 0) {
+              sawReset = true;
+            }
+            return;
+          }
+          if (duration > 0) {
+            this._settleLoadPromise(myGen);
+          }
+        }, 100);
+        this.loadReadyTimer = globalThis.setTimeout(
+          () => this._settleLoadPromise(myGen),
+          15000
+        );
+      });
     }
 
     OnPlay() {

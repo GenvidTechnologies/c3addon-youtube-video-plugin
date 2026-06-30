@@ -59,6 +59,28 @@ Action: GCoreVideoPlugin → Load Video("https://player.gvideo.co/videos/421804_
 Action: GCoreVideoPlugin → Set Fallback URLs("https://backup.example.com/stream.m3u8")
 ```
 
+### Awaiting load completion
+
+**Load Video** is awaitable. Placing `Await` on the action causes Construct to pause the
+event chain until the video's metadata has loaded (duration becomes known), so any action on
+the next line reliably applies to the freshly-loaded video:
+
+```
+Event: On start of layout
+  Await: YouTubeVideoPlugin → Load Video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+  Action: YouTubeVideoPlugin → Set playback time(30)   // applies to the new video
+```
+
+Without `Await`, `Set playback time` may arrive before the player is ready and be silently
+dropped — the same race that existed before this feature.
+
+**"Resolved" means the load attempt finished, not that it succeeded.** The action resolves on
+any of: metadata loaded, a player error, a 15-second timeout, or the action being superseded
+by a subsequent `Load Video` call. Check the outcome with the **On error** trigger or the
+**Is ready** condition after the await.
+
+Event sheets that do not `Await Load Video` are unaffected — back-compat is preserved.
+
 ---
 
 ## 2. Low latency (live streams)

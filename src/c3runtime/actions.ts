@@ -19,7 +19,10 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Acts = {
 		this._SetVolume(level);
 	},
 	SetURL(this:SDKInstanceClass, url: string) {
-		this._SetURL(url);
+		// Async action (aces.json isAsync) — return the promise so Construct waits
+		// for the video load to settle before running the next event-sheet action
+		// (e.g. Set playback time). See ElementHandler.OnLoadVideo / ADR-0005.
+		return this._SetURL(url);
 	},
 	SetSubtitles(this:SDKInstanceClass, language: string) {
 		this._SetSubtitles(language);

@@ -102,15 +102,18 @@ These map to the development-task issues:
 - **playerVars mapping.** *Done (#3).* All initial playerVars are wired; see the
   table above. Empirical verification of `loop`/`modestbranding` behavior deferred
   to issue #10.
-- **Awaitable Load Video (#18).** Upstream GCore made the `set-url` ACE awaitable,
-  resolving the load promise at GCore's per-load `Ready` event so post-load
-  settings (subtitles / seek) don't race the async load. **That contract
-  does not port directly:** YouTube's `onReady` fires once at player creation and
+- **Awaitable Load Video (#18).** *Done.* `set-url` is awaitable (`isAsync`); the
+  load promise resolves on a **polled `getDuration() > 0`** signal (metadata
+  loaded ⇒ `seekTo`/captions can apply). The upstream GCore resolve-at-`Ready`
+  contract does **not** port: YouTube's `onReady` fires once at player creation and
   does **not** re-fire on the `loadVideoById` reuse path (see "Audio lifecycle"
-  above), so a YouTube awaitable-load must settle on a different per-load signal —
-  likely an `onStateChange` transition (e.g. to `CUED`/`PLAYING`) after the load.
-  *Hypothesis, not yet verified empirically* — pin down the actual signal with the
-  test harness before implementing. Tracked in issue #18.
+  above), and `PLAYING` is unreliable — it can lag metadata by ~2 s and **never
+  fires when autoplay is blocked**, so resolving on it would hang. The load
+  settles-on-all-outcomes (duration / `onError` / 15 s timeout / supersession /
+  `Destroy`) and is generation-guarded; stale reuse-load state events carry
+  `dur=0` and are filtered. Empirically pinned via
+  [`test/probe-load-timing.html`](../test/probe-load-timing.html); see
+  [decisions/0005-awaitable-load-video.md](decisions/0005-awaitable-load-video.md).
 - **URL → video id.** `extractVideoId()` handles `watch?v=`, `youtu.be/`,
   `/embed/`, `/shorts/`, `/v/`, and bare ids. Confirm the set of inputs Construct
   authors will actually paste.

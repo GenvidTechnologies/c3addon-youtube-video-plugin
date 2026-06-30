@@ -45,6 +45,30 @@ state (`playerState`, `audioState`, `currentVolume`, `duration`,
 `currentPlaybackTime`). Note `instance.ts` treats `currentVolume === 0` as
 muted.
 
+### Bridge modes: fire-and-forget vs. async round-trip
+
+The bridge supports two calling modes on the runtime side:
+
+- **Fire-and-forget** — `_postToDOMElement(handler, data)`: posts a message to
+  the DOM side and returns `void`. Used for `play`, `pause`, `seek`,
+  `setVolume`, `mute`, `unmute`, `resize`, and `UpdateState`. The DOM handler's
+  return value is discarded.
+- **Async round-trip** — `_postToDOMElementAsync(handler, data): Promise<JSONValue>`:
+  posts a message and returns a promise that resolves when the DOM handler's own
+  returned `Promise<JSONValue>` settles. Used when the runtime needs to await a
+  DOM-side outcome — for example, knowing when video metadata has loaded.
+
+The `"loadVideo"` handler (`set-url` / Load Video) is the first user of the
+async mode in this fork. Because the void-typed handler registration in
+`domSide.ts` would discard a `Promise` return value, `"loadVideo"` is registered
+separately so its promise propagates through the bridge correctly.
+
+Using the async mode is appropriate when: (a) the DOM side must await a
+player-API event or poll before the action is considered complete, and (b) the
+runtime needs to surface that completion to the event sheet as an awaitable
+action (`isAsync: true` in `aces.json`). See
+[ADR-0005](decisions/0005-awaitable-load-video.md) for the design rationale.
+
 ## Why this matters: player-API coupling is isolated to one file
 
 Because the bridge protocol is generic, **all coupling to the YouTube player API
