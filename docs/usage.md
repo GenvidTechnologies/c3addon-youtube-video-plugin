@@ -178,36 +178,7 @@ The **Subtitles** expression returns the currently active language tag
 
 ---
 
-## 4. Quality levels
-
-The plugin exposes ABR quality selection. Quality levels correspond to the
-renditions in the HLS manifest (e.g. 360p / 720p / 1080p).
-
-| ACE | Description |
-|---|---|
-| **Set Quality** | Set the quality level index. `-1` = automatic (ABR); other values pin a specific level. |
-| `GetCurrentQuality` | Current quality level index (`-1` = auto/ABR). |
-| `GetQualityCount` | Number of available quality levels. |
-
-There is no quality-change event. The plugin polls quality on each time-update
-tick and the value updates in `GetCurrentQuality` when the level actually
-changes. If you need a quality indicator, read `GetCurrentQuality` periodically
-or on `On state changed`.
-
-**Quality menu pattern:**
-
-```
-Trigger: GCoreVideoPlugin → Is ready
-  Repeat GCoreVideoPlugin.GetQualityCount times
-    Action: Add quality option for level loopindex
-
-Event: Player clicks quality item
-  Action: GCoreVideoPlugin → Set Quality(clickedItem.level)
-```
-
----
-
-## 5. Player controls (chrome)
+## 4. Player controls (chrome)
 
 The player's built-in control bar (play/pause button, seek bar, volume slider)
 is called the "chrome." It is enabled by default in v2.0.0.
@@ -230,7 +201,7 @@ The toggle takes effect immediately on a playing video.
 
 ---
 
-## 6. DVR (seekable live window)
+## 5. DVR (seekable live window)
 
 DVR mode allows viewers to seek within a live stream's rolling window.
 
@@ -242,7 +213,7 @@ DVR mode allows viewers to seek within a live stream's rolling window.
 | `GetSeekableStart` | Start of the seekable window in seconds (`0` when unknown or not DVR). |
 | `GetSeekableEnd` | End of the seekable window in seconds (`-1` when unknown or not DVR). |
 
-To seek within the DVR window use **Set playback time** (see section 7).
+To seek within the DVR window use **Set playback time** (see section 6).
 
 > **Not yet verified against a live DVR stream.** DVR support is implemented
 > and shipped in v2.0.0.0 but has not been confirmed against a real DVR stream.
@@ -251,7 +222,7 @@ To seek within the DVR window use **Set playback time** (see section 7).
 
 ---
 
-## 7. Other ACEs — quick reference
+## 6. Other ACEs — quick reference
 
 ### Actions
 
@@ -294,7 +265,7 @@ To seek within the DVR window use **Set playback time** (see section 7).
 
 ---
 
-## 8. Upgrading to v2.0.0 — breaking changes
+## 7. Upgrading to v2.0.0 — breaking changes
 
 Two changes require updating existing event sheets.
 
