@@ -130,16 +130,6 @@
 				]
 			},
 			{
-				"id": "set-quality",
-				"scriptName": "SetQuality",
-				"params": [
-					{
-						"id": "level",
-						"type": "number"
-					}
-				]
-			},
-			{
 				"id": "set-enable-chrome",
 				"scriptName": "SetEnableChrome",
 				"params": [
@@ -235,16 +225,6 @@
 			{
 				"id": "get-enable-chrome",
 				"expressionName": "GetEnableChrome",
-				"returnType": "number"
-			},
-			{
-				"id": "get-current-quality",
-				"expressionName": "GetCurrentQuality",
-				"returnType": "number"
-			},
-			{
-				"id": "get-quality-count",
-				"expressionName": "GetQualityCount",
 				"returnType": "number"
 			},
 			{

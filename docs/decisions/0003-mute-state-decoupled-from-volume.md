@@ -65,8 +65,10 @@ Consequences below).
   contract.
 - This establishes the pattern for **all** player-derived state in this plugin:
   the DOM seam computes and posts authoritative state; `instance.ts` stores what
-  it receives rather than re-deriving player semantics it cannot observe. The
-  upcoming quality (#5) and captions (#6) ports should follow the same rule — post
-  explicit derived state from the seam, do not infer it in the runtime.
+  it receives rather than re-deriving player semantics it cannot observe.
+  Issue #5 retired the quality surface rather than porting it — see
+  [ADR-0004](0004-retire-pre-release-quality-aces.md). The captions (#6) port is still
+  open and should follow the same rule — post explicit derived state from the seam, do
+  not infer it in the runtime.
 - The `_isReady` gate (`_currentVolume > -1 && _duration > -1`) is unchanged and
   unaffected.

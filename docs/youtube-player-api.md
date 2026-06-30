@@ -86,7 +86,7 @@ These map to the development-task issues:
   plugin's `playerState`; `onReady` posts `duration` / `currentVolume` (and
   `audioState`) so the runtime reaches its "ready" state; `currentPlaybackTime` is
   polled while playing (YouTube has no `timeupdate` event). `onError` maps the YT
-  error codes to readable messages. Still open: quality/captions/DVR/subtitle
+  error codes to readable messages. Still open: captions/subtitle
   fields (see the bullets below and their issues).
 - **Audio lifecycle.** *Done (#4).* `lastVolume`/`lastMuted` (the user's intent via
   the ACEs) are restored on `onReady` and re-applied on each `loadVideoById` (which
@@ -104,7 +104,7 @@ These map to the development-task issues:
   to issue #10.
 - **Awaitable Load Video (#18).** Upstream GCore made the `set-url` ACE awaitable,
   resolving the load promise at GCore's per-load `Ready` event so post-load
-  settings (subtitles / quality / seek) don't race the async load. **That contract
+  settings (subtitles / seek) don't race the async load. **That contract
   does not port directly:** YouTube's `onReady` fires once at player creation and
   does **not** re-fire on the `loadVideoById` reuse path (see "Audio lifecycle"
   above), so a YouTube awaitable-load must settle on a different per-load signal —
@@ -114,9 +114,7 @@ These map to the development-task issues:
 - **URL → video id.** `extractVideoId()` handles `watch?v=`, `youtu.be/`,
   `/embed/`, `/shorts/`, `/v/`, and bare ids. Confirm the set of inputs Construct
   authors will actually paste.
-- **Quality.** YouTube quality is advisory and uses *named* levels
-  (`setPlaybackQuality("hd720")`), not the numeric ABR index the GCore-era ACEs
-  assume. Decide how/whether to map the existing `SetQuality` ACE.
+- **Quality.** The numeric ABR quality ACEs were retired in issue #5 — see [ADR-0004](decisions/0004-retire-pre-release-quality-aces.md). YouTube quality is advisory/deprecated; no replacement surface is planned.
 - **Captions.** YouTube captions are controlled via `playerVars.cc_load_policy`
   and the (unofficial) caption module, not the in-manifest/side-loaded track
   model the GCore ACEs use.
