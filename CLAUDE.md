@@ -47,6 +47,10 @@ empirically in a real browser** with [`test/player-test.html`](test/player-test.
 running it settles in minutes what static analysis gets wrong over hours. See
 `docs/youtube-player-api.md` for the plugin-specific gotchas.
 
+> **Playwright MCP availability.** The `browser_*` tools come from the `playwright`
+> Claude Code plugin — if they're absent, install/enable it via `/plugin` instead
+> of falling back to a hand-built user-run probe.
+
 ## Commit Format
 
 `<type> - <description>`, where `<type>` is one of `feat`, `fix`, or `chore`.
