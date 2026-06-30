@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YouTube load-timing probe (issue #18)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 1rem; max-width: 80ch; }
+    #player { width: 480px; height: 270px; background: #000; }
+    #log { white-space: pre-wrap; background: #111; color: #5f5; padding: .5rem;
+           height: 320px; overflow: auto; font-family: monospace; font-size: 12px; }
+    #summary { white-space: pre-wrap; background: #012; color: #9cf; padding: .5rem;
+               font-family: monospace; font-size: 13px; border-left: 3px solid #4af; }
+    .row { margin: .5rem 0; }
+    input[type=text] { width: 16ch; }
+    button { margin: 2px; }
+  </style>
+</head>
+<body>
+  <h1>YouTube load-timing probe — issue #18</h1>
+  <p>Determines the per-load <b>resolve signal</b> for awaitable Load Video.
+     <b>YouTube's <code>onReady</code> fires once per player</b>, not per
+     <code>loadVideoById</code>, so the awaitable load must resolve from an
+     <code>onStateChange</code> transition. This probe records, for both a
+     <b>first load</b> and a <b>player-reuse load</b>, the state timeline and when
+     <code>getDuration()</code> first becomes &gt; 0.</p>
+
+  <div class="row">
+    Video A (first load): <input id="idA" type="text" value="M7lc1UVf-VE" />
+    Video B (reuse load): <input id="idB" type="text" value="aqz-KE-bpKQ" />
+    <button id="run">Run probe</button>
+  </div>
+
+  <div id="player"></div>
+
+  <h3>Summary (copy this back)</h3>
+  <div id="summary">Click "Run probe". Auto-runs on load in ~1s.</div>
+
+  <h3>Raw timeline</h3>
+  <div id="log"></div>
+
+  <script>
+    // ---- state name map ---------------------------------------------------
+    const STATE = { "-1": "UNSTARTED", "0": "ENDED", "1": "PLAYING",
+                    "2": "PAUSED", "3": "BUFFERING", "5": "CUED" };
+
+    let player = null;
+    let t0 = 0;                 // request time of the current load
+    let phase = "";            // "A" (first load) or "B" (reuse load)
+    const timeline = [];        // {phase, ms, ev, state, duration, current}
+    window.__timeline = timeline;
+
+    // Polled "first duration>0" per phase — onStateChange-only sampling misses a
+    // duration that becomes known while the player sits in a stable state
+    // (e.g. BUFFERING with autoplay blocked), so poll independently.
+    const durationKnownAt = { A: null, B: null };
+    let pollTimer = null;
+    function startPolling() {
+      stopPolling();
+      pollTimer = setInterval(() => {
+        if (!player || !player.getDuration) return;
+        let d = 0; try { d = player.getDuration(); } catch (e) {}
+        if (d > 0 && durationKnownAt[phase] === null) {
+          durationKnownAt[phase] = now() - t0;
+          rec("POLL:duration>0", snap());
+        }
+      }, 100);
+    }
+    function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+    const logEl = document.getElementById("log");
+    const summaryEl = document.getElementById("summary");
+
+    function now() { return Math.round(performance.now()); }
+    function rec(ev, data) {
+      const ms = t0 ? now() - t0 : 0;
+      const row = Object.assign({ phase, ms, ev }, data || {});
+      timeline.push(row);
+      logEl.textContent += `[${phase}] +${ms}ms  ${ev}` +
+        (data ? "  " + JSON.stringify(data) : "") + "\n";
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function snap() {
+      if (!player || !player.getPlayerState) return {};
+      let duration = -1, current = -1, state = "?";
+      try { duration = player.getDuration(); } catch (e) {}
+      try { current = player.getCurrentTime(); } catch (e) {}
+      try { state = STATE[String(player.getPlayerState())] ?? player.getPlayerState(); } catch (e) {}
+      return { state, duration: +duration.toFixed(2), current: +current.toFixed(2) };
+    }
+
+    // ---- YT API bootstrap -------------------------------------------------
+    function loadAPI() {
+      return new Promise((resolve) => {
+        if (window.YT && window.YT.Player) return resolve(window.YT);
+        window.onYouTubeIframeAPIReady = () => resolve(window.YT);
+        const s = document.createElement("script");
+        s.src = "https://www.youtube.com/iframe_api";
+        document.head.appendChild(s);
+      });
+    }
+
+    function onState(ev) {
+      const name = STATE[String(ev.data)] ?? ev.data;
+      rec("onStateChange:" + name, snap());
+    }
+
+    async function run() {
+      timeline.length = 0;
+      logEl.textContent = "";
+      summaryEl.textContent = "running…";
+      const idA = document.getElementById("idA").value.trim();
+      const idB = document.getElementById("idB").value.trim();
+
+      const YT = await loadAPI();
+
+      // ---- Phase A: first load (player construction) ----------------------
+      phase = "A"; t0 = now(); durationKnownAt.A = null;
+      rec("loadVideoById(request)", { id: idA, note: "first load / construction" });
+      startPolling();
+      await new Promise((resolve) => {
+        player = new YT.Player("player", {
+          videoId: idA,
+          playerVars: { autoplay: 1, mute: 1, playsinline: 1, rel: 0 },
+          events: {
+            onReady: () => { rec("onReady", snap()); resolve(); },
+            onStateChange: onState,
+            onError: (e) => rec("onError", { code: e.data }),
+          },
+        });
+      });
+
+      // Let phase A settle to a known duration (and PLAYING, if autoplay allowed).
+      await wait(10000);
+
+      // ---- Phase B: reuse load (loadVideoById on same player) -------------
+      phase = "B"; t0 = now(); durationKnownAt.B = null;
+      rec("loadVideoById(request)", { id: idB, note: "reuse / same player — onReady NOT expected" });
+      player.loadVideoById(idB);
+      await wait(10000);
+
+      stopPolling();
+      summarize();
+    }
+
+    function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+    function firstWith(ph, pred) {
+      return timeline.find((r) => r.phase === ph && r.ev.startsWith("onStateChange") && pred(r));
+    }
+    function fmt(r) { return r ? `+${r.ms}ms (${r.ev.replace("onStateChange:", "")}, dur=${r.duration})` : "NEVER"; }
+
+    function summarize() {
+      const aReady = timeline.find((r) => r.phase === "A" && r.ev === "onReady");
+      const bReady = timeline.find((r) => r.phase === "B" && r.ev === "onReady");
+      const aDur = firstWith("A", (r) => r.duration > 0);
+      const bDur = firstWith("B", (r) => r.duration > 0);
+      const aPlaying = firstWith("A", (r) => r.ev.endsWith("PLAYING"));
+      const bPlaying = firstWith("B", (r) => r.ev.endsWith("PLAYING"));
+      const bStates = timeline.filter((r) => r.phase === "B" && r.ev.startsWith("onStateChange"))
+                              .map((r) => `${r.ev.replace("onStateChange:", "")}@+${r.ms}ms(dur=${r.duration})`);
+
+      summaryEl.textContent = [
+        "=== ISSUE #18 LOAD-TIMING SUMMARY ===",
+        "",
+        "PHASE A (first load / player construction):",
+        "  onReady fired:            " + (aReady ? `YES @ +${aReady.ms}ms` : "NO"),
+        "  first duration>0 (poll):  " + (durationKnownAt.A !== null ? `+${durationKnownAt.A}ms` : "NEVER"),
+        "  first duration>0 (event): " + fmt(aDur),
+        "  first PLAYING:            " + fmt(aPlaying),
+        "",
+        "PHASE B (reuse via loadVideoById — the key case):",
+        "  onReady fired again:      " + (bReady ? `YES @ +${bReady.ms}ms (!!unexpected)` : "NO (expected)"),
+        "  first duration>0 (poll):  " + (durationKnownAt.B !== null ? `+${durationKnownAt.B}ms` : "NEVER"),
+        "  first duration>0 (event): " + fmt(bDur),
+        "  first PLAYING:            " + fmt(bPlaying),
+        "  full B state sequence:",
+        "    " + (bStates.length ? bStates.join(" -> ") : "(none)"),
+        "",
+        "INTERPRETATION:",
+        "  - If B 'first duration>0' fires BEFORE 'first PLAYING' on a state in",
+        "    {BUFFERING,PLAYING}, resolve there (earlier, playback-independent).",
+        "  - Else resolve at first PLAYING of the load generation (robust fallback).",
+        "  - Watch for any stale PAUSED/ENDED/UNSTARTED from video A leaking into",
+        "    phase B BEFORE the new video's states (the supersession/generation race).",
+      ].join("\n");
+    }
+
+    document.getElementById("run").addEventListener("click", run);
+    setTimeout(run, 1000); // auto-run
+  </script>
+</body>
+</html>
