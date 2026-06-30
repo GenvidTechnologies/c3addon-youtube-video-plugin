@@ -6,10 +6,10 @@
 // This is the *only* file coupled to the player API (see docs/architecture.md).
 // It was ported from the GCore player handler: the runtime <-> DOM message
 // bridge and the public method surface (OnPlay/OnPause/OnSeek/OnSetVolume/
-// OnSetQuality/OnResize/UpdateState/Destroy) are preserved so the rest of the
+// OnResize/UpdateState/Destroy) are preserved so the rest of the
 // plugin compiles and runs unchanged. The actual YouTube playback wiring —
 // constructing the YT.Player, mapping its events to runtime state, captions,
-// quality, etc. — is intentionally left as TODOs and tracked in this repo's
+// etc. — is intentionally left as TODOs and tracked in this repo's
 // GitHub issues. See docs/youtube-player-api.md.
 //
 // API reference: https://developers.google.com/youtube/iframe_api_reference
@@ -42,7 +42,6 @@
     getDuration(): number;
     getCurrentTime(): number;
     setSize(width: number, height: number): void;
-    setPlaybackQuality(suggestedQuality: string): void;
     loadVideoById(videoId: string): void;
     isMuted(): boolean;
     destroy(): void;
@@ -237,8 +236,8 @@
       this.enableChrome = (e["enableChrome"] ?? true) as boolean;
       this.loop = (e["loop"] ?? false) as boolean;
       this.start = (e["start"] ?? 0) as number;
-      // TODO(youtube): map the remaining incoming state — subtitles selection,
-      // quality — onto YouTube IFrame player options. Tracked in the repo's GitHub issues.
+      // TODO(youtube): map the remaining incoming state — subtitles selection —
+      // onto YouTube IFrame player options. Tracked in the repo's GitHub issues.
 
       if (this.currentUrl === url) {
         // URL unchanged — apply lightweight changes (e.g. chrome/controls) to
@@ -297,8 +296,8 @@
         playerVars: this.buildPlayerVars(videoId),
         events: {
           // TODO(youtube): translate these into PostStateToRuntime() calls so
-          // the runtime ACE layer (playerState, duration, volume, quality,
-          // captions, etc.) is driven by real player events. Each of these is
+          // the runtime ACE layer (playerState, duration, volume, captions,
+          // etc.) is driven by real player events. Each of these is
           // tracked as a development-task issue.
           onReady: (ev: YTPlayerEvent) => {
             console.log("[video player] YouTube player ready");
@@ -517,14 +516,6 @@
       this.lastMuted = false;
       this.player?.unMute();
       this.PostAudioState();
-    }
-
-    OnSetQuality(state: JSONObject) {
-      const level = state["level"];
-      console.log("[video player] Set quality requested", level);
-      // TODO(youtube): the IFrame API uses named quality levels
-      // (setPlaybackQuality("hd720"…)) and quality control is largely advisory.
-      // Map the numeric ACE level onto YouTube's model. Tracked in GitHub issues.
     }
 
     OnResize() {

@@ -24,9 +24,6 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Acts = {
 	SetSubtitles(this:SDKInstanceClass, language: string) {
 		this._SetSubtitles(language);
 	},
-	SetQuality(this:SDKInstanceClass, level: number) {
-		this._SetQuality(level);
-	},
 	SetEnableChrome(this:SDKInstanceClass, enable: boolean) {
 		this._SetEnableChrome(enable);
 	},

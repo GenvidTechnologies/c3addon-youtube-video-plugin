@@ -178,17 +178,6 @@
 							}
 						}
 					},
-					"set-quality": {
-						"list-name": "Set Quality",
-						"display-text": "Set quality level to {0}",
-						"description": "Set the ABR quality level. -1 = auto/ABR, otherwise the level index.",
-						"params": {
-							"level": {
-								"name": "Level",
-								"desc": "Quality level index. -1 = auto/ABR, otherwise the level index from GetQualityCount."
-							}
-						}
-					},
 					"set-enable-chrome": {
 						"list-name": "Set Enable Chrome",
 						"display-text": "Set player built-in control bar (chrome) enabled to {0}",
@@ -281,14 +270,6 @@
 						"description": "Whether the YouTube player control bar (player built-in UI) is enabled.",
 						"translated-name": "GetEnableChrome"
 					},
-					"get-current-quality": {
-						"description": "The current ABR quality level index. -1 = auto/ABR.",
-						"translated-name": "GetCurrentQuality"
-					},
-					"get-quality-count": {
-						"description": "The number of available ABR quality levels.",
-						"translated-name": "GetQualityCount"
-					},
 					"get-subtitle-count": {
 						"description": "The number of available subtitle tracks (in-manifest + side-loaded).",
 						"translated-name": "GetSubtitleCount"
@@ -328,8 +309,6 @@
 					"audioState": "Audio State",
 					"lastErrorCategory": "Last Error Category",
 					"lastErrorMessage": "Last Error Message",
-					"currentQuality": "Current Quality Level",
-					"qualityCount": "Quality Level Count",
 					"subtitleSources": "External Subtitle Source Count",
 					"subtitleTracks": "Subtitle Track Count"
 				}

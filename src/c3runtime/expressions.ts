@@ -31,12 +31,6 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Exps =
 	GetEnableChrome(this:SDKInstanceClass) {
 		return this._GetEnableChrome();
 	},
-	GetCurrentQuality(this:SDKInstanceClass) {
-		return this._currentQuality;
-	},
-	GetQualityCount(this:SDKInstanceClass) {
-		return this._qualityCount;
-	},
 	GetSubtitleCount(this:SDKInstanceClass) {
 		return this._GetSubtitleCount();
 	},
