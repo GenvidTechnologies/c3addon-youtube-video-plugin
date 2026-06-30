@@ -209,15 +209,12 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		};
 	}
 
-	_SetURL(url: string) {
+	_SetURL(url: string): Promise<JSONValue> {
 		if (this._url === url) {
-			return;
+			// No-op: nothing to load, so the awaitable load resolves immediately.
+			return Promise.resolve(null);
 		}
 
-		// Update the locally stored text, and call UpdateElementState().
-		// This calls GetElementState() - which contains the button text as part of the state -
-		// and then calls UpdateState() in domSide.js with the state object, where the button text
-		// is applied to the DOM element.
 		this._url = url;
 		// Loading a video starts with a clean subtitle slate: subtitles are no
 		// longer a SetURL parameter. Use SetSubtitles / AddSubtitleSource after
@@ -225,7 +222,13 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		// selection and side-loaded sources) from leaking onto the new one.
 		this._subtitles = "off";
 		this._subtitleSources = [];
-		this._updateElementState();
+		// Drive the load over the async DOM bridge instead of the fire-and-forget
+		// _updateElementState(): the "loadVideo" handler returns a promise that
+		// resolves once the new video's metadata is loaded (or settles on
+		// error/timeout/supersession), so an event sheet can await Load Video
+		// before applying post-load settings (Set playback time, etc.). See
+		// ElementHandler.OnLoadVideo / ADR-0005.
+		return this._postToDOMElementAsync("loadVideo", this._getElementState());
 	}
 
 	_GetURL() {
