@@ -71,9 +71,13 @@ outcomes via the **On error** trigger and **Is ready** condition, not by catchin
 
 ### 4. Generation counter and `sawReset` guard
 
-A per-instance `loadGen` counter is incremented at the start of each `OnLoadVideo` call. All
-callbacks (poll interval, timeout, `onError`) capture the generation at registration time and
-are silently ignored when `loadGen` has since advanced (supersession guard).
+A per-instance `loadGen` counter is incremented at the start of each `OnLoadVideo` call. The
+poll interval and the timeout are created fresh per load, so each captures its own generation
+(`myGen`) and is silently ignored once `loadGen` has advanced (supersession guard). The
+`onError` callback is different: it is registered once on the single per-instance player and
+reused across `loadVideoById` reuse loads, so it settles the *current* generation — an error
+always pertains to the load currently in flight. Capturing a generation in `onError` would
+bind it to the first load and wrongly skip settling every reuse-load error.
 
 On player reuse, `loadVideoById` briefly continues to report the old video's duration before
 resetting to zero. A `sawReset` flag within each poll closure requires that `getDuration()`

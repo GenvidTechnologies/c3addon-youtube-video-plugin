@@ -392,7 +392,13 @@
             const message = YT_ERROR_MESSAGES[code] ?? `YouTube player error ${code}`;
             this.PostErrorToRuntime("youtube", message);
             // A load that errors must settle its awaitable so the event sheet
-            // doesn't wait out the 15s timeout.
+            // doesn't wait out the 15s timeout. Use the CURRENT loadGen (not a
+            // captured one): this callback is registered once on the single
+            // per-instance player and reused across loadVideoById reuse loads, so
+            // an error always pertains to the load currently in flight. Capturing
+            // a generation here would bind it to the first load and wrongly skip
+            // settling every reuse-load error. (Poll/timeout differ — they are
+            // created fresh per load, so they capture myGen.) See ADR-0005 §4.
             this._settleLoadPromise(this.loadGen);
           },
         },
