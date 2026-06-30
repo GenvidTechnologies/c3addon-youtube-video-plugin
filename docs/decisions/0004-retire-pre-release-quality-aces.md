@@ -47,7 +47,7 @@ preservation.
 
 ### 3. Retire `SetQuality`, `GetCurrentQuality`, `GetQualityCount`
 
-The three quality ACEs are removed across all eight lockstep contract and runtime files
+The three quality ACEs are removed across all seven lockstep contract and runtime files
 (`src/aces.json`, `src/lang/en-US.json`, `src/c3runtime/actions.ts`,
 `src/c3runtime/expressions.ts`, `src/c3runtime/instance.ts`, `src/c3runtime/domSide.ts`,
 `src/c3runtime/dom/ElementHandler.ts`). Zero behavioral change — every deleted path was
