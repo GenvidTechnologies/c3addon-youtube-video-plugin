@@ -301,6 +301,8 @@
     }
 
     // ── Readout polling ────────────────────────────────────────────────────────────
+    // Poll the time/volume readout at ~2 updates/sec — smooth enough for a manual
+    // readout without churn (the plugin polls playback at 250ms; this is a coarser UI tick).
     setInterval(() => { refreshReadout(); }, 500);
     function refreshReadout() {
       if (!activePlayer) {

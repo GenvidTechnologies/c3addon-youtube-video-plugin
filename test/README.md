@@ -57,6 +57,11 @@ defers to issue #10:
 | **Captions module** | Does the unofficial `setOption`/`getOption` captions module exist and accept `track`/`reload`/`tracklist` keys? Feeds issue #6. |
 | **Quality (advisory)** | What does `getAvailableQualityLevels()` / `setPlaybackQuality()` actually return/do? Advisory-only; numeric ABR quality ACEs were retired — see ADR-0004. |
 
+The **Loop survival** and **modestbranding** probes settle empirical questions
+deferred in [`../docs/youtube-player-api.md`](../docs/youtube-player-api.md); the
+others feed tracked issues (autoplay → #4, captions → #6) or an existing decision
+(quality → ADR-0004).
+
 Each probe builds its own `YT.Player` instance (or reuses the current one) and
 logs all events to the shared event log so you can observe the full state
 sequence.
