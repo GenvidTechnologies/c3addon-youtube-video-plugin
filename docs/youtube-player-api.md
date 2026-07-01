@@ -67,9 +67,10 @@ string that would break YouTube's postMessage handshake.
 and have no live setter. `loop` and `start` are therefore not changed while a player
 is running, and are NOT re-applied on the `loadVideoById` reuse path (URL change
 with an existing player). A full player rebuild is required to change either value.
-Empirical verification of these constraints (does `loop` survive `loadVideoById`;
-is `modestbranding` truly a no-op in current YouTube) is deferred to issue #10
-(the YouTube test harness).
+These constraints are exercisable via the Loop and modestbranding probes in
+[`test/player-test.html`](../test/player-test.html) (the general YouTube bench
+delivered in issue #10); see the `playerVars mapping` bullet under Open questions
+for current findings.
 
 ## Methods (control)
 
@@ -96,12 +97,22 @@ These map to the development-task issues:
   volume — the DOM seam is authoritative for `audioState` (from `isMuted()`) and the
   runtime no longer infers mute from `getVolume()`; see
   [decisions/0003-mute-state-decoupled-from-volume.md](decisions/0003-mute-state-decoupled-from-volume.md).
-  Empirical verification that the browser autoplay policy actually permits the
-  unmute-on-`PLAYING` (without a user gesture) is deferred to the test harness (#10)
-  and sample project (#9).
+  Empirically checked in [`test/player-test.html`](../test/player-test.html)'s
+  autoplay-unmute probe (#10): calling `unMute()` on the first `PLAYING` **without a
+  user gesture is rejected** — `isMuted()` stays `true` — so autoplay-muted audio
+  cannot be forced on programmatically. The unmute-on-`PLAYING` reconciliation
+  therefore only takes real effect once the player has received a user gesture; the
+  in-game confirmation is the sample project (#9). (The probe ran under automation
+  yet was still blocked, so the "blocked" result is not a permissive-automation
+  artifact.)
 - **playerVars mapping.** *Done (#3).* All initial playerVars are wired; see the
-  table above. Empirical verification of `loop`/`modestbranding` behavior deferred
-  to issue #10.
+  table above. `loop`/`modestbranding` are exercised by
+  [`test/player-test.html`](../test/player-test.html)'s probes (#10): the
+  `loadVideoById` reuse path re-sequences cleanly
+  (PAUSED→UNSTARTED→BUFFERING→PLAYING), but whether `loop` *survives* a reuse switch
+  needs an end-of-video watch and is **not yet confirmed** — moot in practice, since
+  the plugin rebuilds the player when `loop`/`start` change rather than relying on
+  reuse. `modestbranding` is visual-only (not machine-observable via the harness).
 - **Awaitable Load Video (#18).** *Done.* `set-url` is awaitable (`isAsync`); the
   load promise resolves on a **polled `getDuration() > 0`** signal (metadata
   loaded ⇒ `seekTo`/captions can apply). The upstream GCore resolve-at-`Ready`
@@ -117,10 +128,15 @@ These map to the development-task issues:
 - **URL → video id.** `extractVideoId()` handles `watch?v=`, `youtu.be/`,
   `/embed/`, `/shorts/`, `/v/`, and bare ids. Confirm the set of inputs Construct
   authors will actually paste.
-- **Quality.** The numeric ABR quality ACEs were retired in issue #5 — see [ADR-0004](decisions/0004-retire-pre-release-quality-aces.md). YouTube quality is advisory/deprecated; no replacement surface is planned.
+- **Quality.** The numeric ABR quality ACEs were retired in issue #5 — see [ADR-0004](decisions/0004-retire-pre-release-quality-aces.md). YouTube quality is advisory/deprecated; no replacement surface is planned. Confirmed via the harness quality probe (#10): `getAvailableQualityLevels()` returns e.g. `hd720/large/medium/small/tiny/auto` and `getPlaybackQuality()` reports the active level, but selection stays advisory — YouTube overrides it.
 - **Captions.** YouTube captions are controlled via `playerVars.cc_load_policy`
   and the (unofficial) caption module, not the in-manifest/side-loaded track
-  model the GCore ACEs use.
+  model the GCore ACEs use. The harness captions probe (#10) confirms the module is
+  reachable on a playing captioned video: `getOption('captions', 'tracklist')`
+  returns the available tracks (e.g. `[{languageCode:'en', …}]`) and
+  `getOption('captions', 'translationLanguages')` returns YouTube's ~195 auto-translate
+  languages; `setOption('captions', 'track', {languageCode})` selects one. This is the
+  surface issue #6 should build on.
 - **GCore-only ACEs.** `SetNoLowLatency`, `SetEnableDVR`, `SetFallbackURLs`, and
   the manifest-resolution machinery have no YouTube equivalent and are slated for
   removal/remap (see issues).

@@ -47,6 +47,14 @@ empirically in a real browser** with [`test/player-test.html`](test/player-test.
 running it settles in minutes what static analysis gets wrong over hours. See
 `docs/youtube-player-api.md` for the plugin-specific gotchas.
 
+The `test/*.html` harnesses are hand-maintained developer tooling: ESLint is
+scoped to `*.ts`/`*.json` and the build copies only `src/`, so
+`npm run lint && npm run build` neither lints nor packages them. That gate is
+**silent on `test/`** — the only real check is loading the harness in a browser.
+When serving it to drive the Playwright MCP, start `http-server` with the Bash
+tool's `run_in_background` (then `TaskStop` when done); a trailing `&` job is
+reaped when the tool call returns, so the next navigate hits connection-refused.
+
 > **Playwright MCP availability.** The `browser_*` tools come from the `playwright`
 > Claude Code plugin — if they're absent, install/enable it via `/plugin` instead
 > of falling back to a hand-built user-run probe.
