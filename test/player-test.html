@@ -3,514 +3,658 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GCore v2 player — manual test harness</title>
+  <title>YouTube IFrame API — manual test harness</title>
   <style>
-    body { font-family: system-ui, sans-serif; margin: 1rem; }
-    #player { width: 640px; height: 360px; background: #000; position: relative; }
+    body { font-family: system-ui, sans-serif; margin: 1rem; max-width: 100ch; }
+    #player-wrap { width: 640px; height: 360px; background: #000; position: relative; margin: .5rem 0; }
     #log { white-space: pre-wrap; background: #111; color: #5f5; padding: .5rem;
-           height: 300px; overflow: auto; font-family: monospace; font-size: 12px; }
+           height: 320px; overflow: auto; font-family: monospace; font-size: 12px; }
     button { margin: 2px; }
     .row { margin: .5rem 0; }
-    .probe-section { border-left: 3px solid #4af; margin: .5rem 0; padding: .25rem 0 .25rem .5rem; }
+    .probe-section { border-left: 3px solid #4af; margin: 1rem 0; padding: .25rem 0 .25rem .75rem; }
     .probe-section h3 { margin: 0 0 .25rem; font-size: .9rem; color: #4af; }
-    input[type=text] { width: 60ch; }
-    input[type=text].narrow { width: 20ch; }
+    .probe-label { font-size: .75rem; color: #999; font-style: italic; }
+    input[type=text] { width: 40ch; }
+    input[type=text].narrow { width: 14ch; }
+    #readout { font-family: monospace; font-size: 12px; color: #ccc; margin-left: 1rem; }
+    #audio-readout { font-family: monospace; font-size: 12px; color: #ccc; margin-left: 1rem; }
     label { margin-right: .5rem; }
     #log-clear { float: right; font-size: 11px; }
   </style>
 </head>
 <body>
-  <h1>GCore v2 player — manual test harness</h1>
-  <p>Standalone test of <code>@gcorevideo/player</code> outside Construct 3. See
-     <a href="README.md">README.md</a>. Open the console + Network tab. Enter a
-     GCore embed URL <em>or</em> a direct <code>master.m3u8</code>, click
-     <b>Load</b>, then pick a subtitle language.</p>
+  <h1>YouTube IFrame API — manual test harness</h1>
+  <p>Raw <code>YT.Player</code> bench — no plugin import, no <code>dist/</code>.
+     Serve over <code>http://</code> via <code>npx http-server</code>, then open
+     the console and Network tab. See <a href="README.md">README.md</a>.</p>
 
-  <!-- ── Main URL + Load ─────────────────────────────────────────────── -->
+  <!-- ── Video id / URL input + Load ─────────────────────────────────── -->
   <div class="row">
-    <input id="url" type="text"
-      value="https://421804.gvideo.io/videos/421804_aRXqc20sxTTLovVV/master.m3u8" />
-    <button id="load">Load</button>
+    <label>Video id or URL:
+      <input id="video-input" type="text" value="M7lc1UVf-VE" />
+    </label>
+    <button id="btn-load">Load</button>
+    <label style="margin-left:.75rem;">
+      <input id="chk-rebuild" type="checkbox" />
+      Force player rebuild on Load (default: reuse via <code>loadVideoById</code>)
+    </label>
   </div>
 
-  <div id="player"></div>
+  <!-- ── Player container ─────────────────────────────────────────────── -->
+  <!-- All players (main + probes) share this container. Wrap lets us
+       recreate the inner div after player.destroy() removes the iframe. -->
+  <div id="player-wrap">
+    <div id="player"></div>
+  </div>
 
-  <!-- ── Subtitles (existing) ────────────────────────────────────────── -->
+  <!-- ── Playback controls ─────────────────────────────────────────────── -->
   <div class="row">
-    <b>Subtitles:</b> <span id="controls">(load a video first)</span>
-    <button id="off">OFF</button>
+    <b>Playback:</b>
+    <button id="btn-play">Play</button>
+    <button id="btn-pause">Pause</button>
+    <button id="btn-seek-back">Seek &minus;10s</button>
+    <button id="btn-seek-fwd">Seek +10s</button>
+    <span id="readout">time: &mdash; / &mdash;</span>
   </div>
 
+  <!-- ── Audio controls ────────────────────────────────────────────────── -->
   <div class="row">
-    <button id="dumpcc">Dump subtitle tracks</button>
-    <button id="dumpvideo">Dump &lt;video&gt;.textTracks (+cues)</button>
+    <b>Audio:</b>
+    <button id="btn-mute">Mute</button>
+    <button id="btn-unmute">Unmute</button>
+    <button id="btn-vol0">Vol 0</button>
+    <button id="btn-vol50">Vol 50</button>
+    <button id="btn-vol100">Vol 100</button>
+    <button id="btn-get-audio">Read vol/mute</button>
+    <span id="audio-readout">&mdash;</span>
   </div>
 
-  <!-- ── A3: Volume units ────────────────────────────────────────────── -->
-  <div class="probe-section">
-    <h3>A3 – Volume units (are they 0..1 or 0..100?)</h3>
-    <div class="row">
-      <button id="vol0">setVolume(0)</button>
-      <button id="vol05">setVolume(0.5)</button>
-      <button id="vol1">setVolume(1)</button>
-      <button id="getvol">getVolume</button>
-    </div>
-  </div>
-
-  <!-- ── A4: In-manifest subtitles ───────────────────────────────────── -->
-  <div class="probe-section">
-    <h3>A4 – In-manifest CC tracks (no ?sub_lang= on the URL)</h3>
-    <div class="row">
-      <button id="dumpcc2">Dump CC tracks</button>
-    </div>
-  </div>
-
-  <!-- ── A5: Low-latency transport ───────────────────────────────────── -->
-  <div class="probe-section">
-    <h3>A5 – Low-latency / playback config</h3>
-    <div class="row">
-      <label>playbackType: <input id="playbackType" type="text" class="narrow" placeholder="e.g. live" /></label>
-      <label>priorityTransport: <input id="priorityTransport" type="text" class="narrow" placeholder="e.g. llhls" /></label>
-      <button id="reloadPlayback">Reload with playback config</button>
-    </div>
-  </div>
-
-  <!-- ── A6: DVR window ──────────────────────────────────────────────── -->
-  <div class="probe-section">
-    <h3>A6 – DVR window</h3>
-    <div class="row">
-      <button id="probeDvr">Probe DVR</button>
-      <label>Alt stream URL (DVR/live):
-        <input id="altUrl" type="text" class="narrow" placeholder="https://…/master.m3u8" />
-      </label>
-      <button id="loadAlt">Load alt URL</button>
-    </div>
-  </div>
-
-  <!-- ── A7: Chrome plugins ──────────────────────────────────────────── -->
-  <div class="probe-section">
-    <h3>A7 – Chrome plugins (BottomGear, Spinner, etc.)</h3>
-    <div class="row">
-      <label><input id="registerChrome" type="checkbox" /> register BottomGear + Spinner on next load</label>
-    </div>
-  </div>
-
-  <!-- ── A8: Quality levels ──────────────────────────────────────────── -->
-  <div class="probe-section">
-    <h3>A8 – Quality levels</h3>
-    <div class="row">
-      <button id="probeLevels">Probe levels</button>
-      <button id="setLevel0">set level 0</button>
-      <button id="setLevelAuto">set level auto (-1)</button>
-    </div>
-  </div>
-
-  <!-- ── D4: External (side-loaded) subtitles ────────────────────────── -->
-  <div class="probe-section">
-    <h3>D4 – External subtitle source (side-loaded VTT)</h3>
-    <div class="row">
-      <label>VTT URL: <input id="extVtt" type="text"
-        value="https://421804.gvideo.io/videos/421804_aRXqc20sxTTLovVV/segment-15-s0q234033v1.vtt" /></label>
-    </div>
-    <div class="row">
-      <label>lang: <input id="extLang" type="text" class="narrow" value="en-ext" /></label>
-      <label>field:
-        <select id="extField"><option value="lang">lang</option><option value="srclang">srclang</option></select>
-      </label>
-      <button id="reloadExt">Reload with external track</button>
-      <button id="dumpExt">Dump cc + &lt;video&gt; tracks</button>
-      <button id="showExtNative">Show ext track natively</button>
-    </div>
-  </div>
-
+  <!-- ── Resize controls ───────────────────────────────────────────────── -->
   <div class="row">
+    <b>Resize:</b>
+    <button id="btn-size-large">setSize(640, 360)</button>
+    <button id="btn-size-small">setSize(320, 180)</button>
+  </div>
+
+  <!-- ── Event log ─────────────────────────────────────────────────────── -->
+  <div class="row">
+    <b>Event log:</b>
     <button id="log-clear">Clear log</button>
   </div>
-  <pre id="log"></pre>
+  <div id="log"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- Exploratory probe sections                                         -->
+  <!-- player-internal — NOT plugin ACEs                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <h2>Exploratory probes
+    <span class="probe-label">— player-internal, NOT plugin ACEs</span>
+  </h2>
+
+  <!-- Probe: Loop survival -->
+  <div class="probe-section">
+    <h3>Loop survival</h3>
+    <p style="margin:.25rem 0;font-size:.85rem;">
+      Build a player with <code>loop:1, playlist:&lt;id&gt;</code>, then call
+      <code>loadVideoById</code> with a <em>different</em> id — does looping
+      survive the reuse path?
+      (<code>docs/youtube-player-api.md</code> deferred question.)
+    </p>
+    <div class="row">
+      <label>Loop id: <input id="probe-loop-id" type="text" class="narrow" value="M7lc1UVf-VE" /></label>
+      <label>Alt id (reuse): <input id="probe-loop-alt" type="text" class="narrow" value="aqz-KE-bpKQ" /></label>
+    </div>
+    <div class="row">
+      <button id="btn-probe-loop-build">Build looping player</button>
+      <button id="btn-probe-loop-switch">loadVideoById(alt id)</button>
+    </div>
+  </div>
+
+  <!-- Probe: modestbranding -->
+  <div class="probe-section">
+    <h3>modestbranding (no-op since 2023)</h3>
+    <p style="margin:.25rem 0;font-size:.85rem;">
+      Build with vs without <code>modestbranding:1</code> — YouTube removed this
+      parameter in 2023; passing it should have no visible effect.
+      (<code>docs/youtube-player-api.md</code> deferred question.)
+    </p>
+    <div class="row">
+      <button id="btn-probe-modest-on">Build with modestbranding:1</button>
+      <button id="btn-probe-modest-off">Build without modestbranding</button>
+    </div>
+  </div>
+
+  <!-- Probe: Autoplay unmute -->
+  <div class="probe-section">
+    <h3>Autoplay unmute (browser autoplay policy)</h3>
+    <p style="margin:.25rem 0;font-size:.85rem;">
+      After autoplay-muted start, on the first <code>PLAYING</code> event call
+      <code>unMute()</code> without any user gesture — does the browser autoplay
+      policy permit it? Feeds issue #4 / <code>docs/youtube-player-api.md</code>.
+    </p>
+    <div class="row">
+      <button id="btn-probe-autoplay-build">Build with autoplay+muted, unmute on PLAYING</button>
+    </div>
+    <p style="margin:.25rem 0;font-size:.85rem;color:#fa4;">
+      Watch the log for <code>isMuted()=false</code> (permitted) vs
+      <code>isMuted()=true</code> (blocked by autoplay policy).
+    </p>
+  </div>
+
+  <!-- Probe: Captions -->
+  <div class="probe-section">
+    <h3>Captions (unofficial module — feeds issue #6)</h3>
+    <p style="margin:.25rem 0;font-size:.85rem;">
+      YouTube captions are controlled via the unofficial
+      <code>setOption</code>/<code>getOption</code> captions module. All calls are
+      guarded in try/catch — errors log rather than throw. Build with
+      <code>cc_load_policy:1</code> first, then probe the module.
+    </p>
+    <div class="row">
+      <label>cc_lang_pref: <input id="probe-cc-lang" type="text" class="narrow" value="en" /></label>
+      <button id="btn-probe-cc-build">Build with cc_load_policy:1</button>
+    </div>
+    <div class="row">
+      <label>languageCode: <input id="probe-cc-set-lang" type="text" class="narrow" value="en" /></label>
+      <button id="btn-probe-cc-set-track">setOption("captions","track",{languageCode})</button>
+      <button id="btn-probe-cc-reload">setOption("captions","reload",true)</button>
+    </div>
+    <div class="row">
+      <button id="btn-probe-cc-get-tracklist">getOption("captions","tracklist")</button>
+      <button id="btn-probe-cc-get-track">getOption("captions","track")</button>
+    </div>
+  </div>
+
+  <!-- Probe: Quality -->
+  <div class="probe-section">
+    <h3>Quality (advisory/deprecated)</h3>
+    <p style="margin:.25rem 0;font-size:.85rem;color:#fa4;">
+      Advisory/deprecated — numeric ABR quality ACEs were retired (ADR-0004);
+      not a plugin feature. Included here to empirically confirm advisory
+      behaviour.
+    </p>
+    <div class="row">
+      <button id="btn-probe-q-levels">getAvailableQualityLevels()</button>
+      <button id="btn-probe-q-current">getPlaybackQuality()</button>
+    </div>
+    <div class="row">
+      <label>Quality level: <input id="probe-q-level" type="text" class="narrow" value="hd720" /></label>
+      <button id="btn-probe-q-set">setPlaybackQuality(level)</button>
+    </div>
+  </div>
 
   <script>
     "use strict";
-    // The browser build is an ES module with named exports and no global; it is
-    // loaded via dynamic import(). (Serve this page over http:// — module import
-    // is blocked from file:// in Chromium.)
-    const PLAYER_URL = "https://player.gvideo.co/v2/assets/latest/index.js";
+
+    // ── State name map (mirrors probe-load-timing.html + ElementHandler.ts) ──────
+    // YT.PlayerState: UNSTARTED(-1) ENDED(0) PLAYING(1) PAUSED(2) BUFFERING(3) CUED(5)
+    const STATE = {
+      "-1": "UNSTARTED",
+      "0":  "ENDED",
+      "1":  "PLAYING",
+      "2":  "PAUSED",
+      "3":  "BUFFERING",
+      "5":  "CUED",
+    };
+
+    // ── Error code map (mirrors ElementHandler.ts YT_ERROR_MESSAGES) ─────────────
+    const YT_ERROR_MESSAGES = {
+      2:   "Invalid video id or parameter",
+      5:   "HTML5 player error",
+      100: "Video not found or removed",
+      101: "Embedded playback disabled by the video owner",
+      150: "Embedded playback disabled by the video owner",
+    };
+
+    // ── Active player ─────────────────────────────────────────────────────────────
+    // All probe builds set activePlayer so the playback/audio/resize controls
+    // always target whoever is currently in the container.
+    let activePlayer = null;
+
+    // ── Log ───────────────────────────────────────────────────────────────────────
     const logEl = document.getElementById("log");
-    let player = null;
-    let _mod = null; // cached module reference for re-use after first import
-
-    function log(...args) {
-      logEl.textContent += args.map((a) =>
-        (typeof a === "string" ? a : (() => { try { return JSON.stringify(a); } catch { return String(a); } })())
-      ).join(" ") + "\n";
+    function now() { return Math.round(performance.now()); }
+    function log(msg) {
+      const line = `+${now()}ms  ${msg}`;
+      logEl.textContent += line + "\n";
       logEl.scrollTop = logEl.scrollHeight;
-      console.log(...args);
+      console.log(line);
     }
-
     document.getElementById("log-clear").onclick = () => { logEl.textContent = ""; };
 
-    // KEY: the GCore Player is a thin wrapper with no caption API. The Clappr
-    // player (core, active playback, subtitle tracks, setTextTrack) is at
-    // `.player`. Subtitles are loaded via the active playback's setTextTrack(id),
-    // NOT player.closedCaptionsTrackId (a no-op on the HLS backend).
-    function activePlayback() {
-      return player?.player?.core?.activePlayback ?? null;
-    }
-    function ccTracks() {
-      const pb = activePlayback();
-      try { return (pb && pb.closedCaptionsTracks) || []; } catch (e) { log("ccTracks err:", e.message); return []; }
-    }
-
-    function selectTrack(id) {
-      const pb = activePlayback();
-      if (!pb) { log("no active playback"); return; }
-      log("setTextTrack(", id, ") on playback:", pb.name);
-      try { pb.setTextTrack(id); } catch (e) { log("setTextTrack err:", e.message); }
-      setTimeout(dumpVideoTextTracks, 1200);
-    }
-
-    function dumpCc() {
-      log("subtitle tracks:", ccTracks().map((t) => ({ id: t.id, name: t.name, lang: t.track && t.track.language })));
-    }
-
-    function dumpVideoTextTracks() {
-      const v = document.querySelector("#player video");
-      if (!v) { log("no <video> element"); return; }
-      log("<video>.textTracks.length:", v.textTracks.length);
-      for (const t of v.textTracks) log(`  ${t.kind} label=${t.label} lang=${t.language} mode=${t.mode} cues=${t.cues ? t.cues.length : "null"}`);
-    }
-
-    document.getElementById("dumpcc").onclick = dumpCc;
-    document.getElementById("dumpvideo").onclick = dumpVideoTextTracks;
-    document.getElementById("off").onclick = () => selectTrack(-1);
-
-    // ── A3: Volume units ───────────────────────────────────────────────
-    function probeVolume(val) {
-      if (!player) { log("A3: no player"); return; }
-      if (val !== null) {
-        let ret;
-        try { ret = player.setVolume?.(val); } catch (e) { log("A3 setVolume err:", e.message); }
-        log(`A3 setVolume(${val}) returned:`, ret === undefined ? "(undefined)" : ret);
-      }
-      let got;
-      try { got = player.getVolume?.(); } catch (e) { log("A3 getVolume err:", e.message); }
-      const videoVol = document.querySelector("#player video")?.volume ?? "unavailable";
-      log(`A3 getVolume() =`, got === undefined ? "unavailable" : got, `| <video>.volume =`, videoVol);
-    }
-    document.getElementById("vol0").onclick  = () => probeVolume(0);
-    document.getElementById("vol05").onclick = () => probeVolume(0.5);
-    document.getElementById("vol1").onclick  = () => probeVolume(1);
-    document.getElementById("getvol").onclick = () => probeVolume(null);
-
-    // ── A4: In-manifest CC tracks ──────────────────────────────────────
-    document.getElementById("dumpcc2").onclick = () => {
-      log("=== A4: Dump CC tracks ===");
-      const pb = activePlayback();
-      if (!pb) { log("A4: no active playback"); return; }
-
-      // Try closedCaptionsTracks first, fall back to other known accessors
-      let tracks = null;
-      if (pb.closedCaptionsTracks !== undefined) {
-        tracks = pb.closedCaptionsTracks;
-        log("A4 source: activePlayback.closedCaptionsTracks");
-      } else if (pb.textTracks !== undefined) {
-        tracks = pb.textTracks;
-        log("A4 source: activePlayback.textTracks (fallback)");
-      } else if (pb.subtitleTracks !== undefined) {
-        tracks = pb.subtitleTracks;
-        log("A4 source: activePlayback.subtitleTracks (fallback)");
-      } else {
-        log("A4: no known CC track accessor found on activePlayback");
-      }
-
-      if (tracks !== null) {
-        const arr = Array.isArray(tracks) ? tracks : (typeof tracks[Symbol.iterator] === "function" ? [...tracks] : []);
-        if (arr.length === 0) {
-          log("A4: 0 CC tracks (manifest may have none, or tracks not yet loaded)");
-        } else {
-          arr.forEach((t, i) => {
-            log(`A4 track[${i}]: id=${t.id ?? "?"} language=${t.language ?? t.track?.language ?? "?"} name=${t.name ?? "?"} label=${t.label ?? "?"}`);
-          });
-        }
-      }
-
-      const videoTracks = document.querySelector("#player video")?.textTracks;
-      log("A4 <video>.textTracks.length:", videoTracks ? videoTracks.length : "unavailable");
-    };
-
-    // ── A5: Reload with playback config ───────────────────────────────
-    document.getElementById("reloadPlayback").onclick = async () => {
-      const playbackTypeVal = document.getElementById("playbackType").value.trim();
-      const priorityTransportVal = document.getElementById("priorityTransport").value.trim();
-      const url = document.getElementById("url").value.trim();
-
-      log("=== A5: Reload with playback config ===");
-      log("A5 playbackType:", playbackTypeVal || "(omitted)");
-      log("A5 priorityTransport:", priorityTransportVal || "(omitted)");
-
-      if (!_mod) { log("A5: module not loaded yet — use Load first, then retry"); return; }
-
-      const { Player, MediaControl, SourceController, ClosedCaptions, BottomGear, Spinner } = _mod;
-      [SourceController, MediaControl, ClosedCaptions].forEach((p) => {
-        if (p) try { Player.registerPlugin(p); } catch (e) { /* already registered */ }
-      });
-
-      if (player) { try { player.destroy(); } catch (e) { /* ignore */ } player = null; }
-
-      const playbackCfg = {
-        hlsjsConfig: { renderTextTracksNatively: true },
-      };
-      if (playbackTypeVal)       playbackCfg.playbackType       = playbackTypeVal;
-      if (priorityTransportVal)  playbackCfg.priorityTransport  = [priorityTransportVal];
-
-      log("A5 playback config:", JSON.stringify(playbackCfg));
-
-      player = new Player({
-        autoPlay: true,
-        mute: true,
-        sources: [{ source: url, mimeType: "application/x-mpegurl" }],
-        playback: playbackCfg,
-      });
-      window.player = player;
-
-      // A2: attach error handler logging raw shape
-      attachErrorHandler();
-
-      player.on("ready", () => {
-        const pb = activePlayback();
-        log("A5 READY — activePlayback.name:", pb?.name ?? "unavailable");
-        log("A5 activePlayback keys (first 20):", Object.keys(pb ?? {}).slice(0, 20).join(", "));
-        rebuildSubtitleButtons();
-      });
-      player.attachTo(document.getElementById("player"));
-      log("A5: attached; autoplay starting...");
-    };
-
-    // ── A6: DVR probe ──────────────────────────────────────────────────
-    document.getElementById("probeDvr").onclick = () => {
-      log("=== A6: Probe DVR ===");
-      const pb = activePlayback();
-      if (!pb) { log("A6: no active playback"); return; }
-
-      const fields = [
-        "dvrEnabled",
-        "name",
+    // ── Video id extraction (mirrors ElementHandler.ts extractVideoId) ─────────────
+    function extractVideoId(input) {
+      const s = (input || "").trim();
+      if (s === "") return "";
+      if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
+      const patterns = [
+        /[?&]v=([A-Za-z0-9_-]{11})/,
+        /youtu\.be\/([A-Za-z0-9_-]{11})/,
+        /\/embed\/([A-Za-z0-9_-]{11})/,
+        /\/shorts\/([A-Za-z0-9_-]{11})/,
+        /\/v\/([A-Za-z0-9_-]{11})/,
       ];
-      fields.forEach((k) => log(`A6 ${k}:`, pb[k] !== undefined ? pb[k] : "unavailable"));
-
-      // Call-style accessors with optional chaining
-      log("A6 dvrInUse():", typeof pb.dvrInUse === "function" ? pb.dvrInUse() : "unavailable");
-      log("A6 getDuration():", typeof pb.getDuration === "function" ? pb.getDuration() : "unavailable");
-      log("A6 getCurrentTime():", typeof pb.getCurrentTime === "function" ? pb.getCurrentTime() : "unavailable");
-
-      // Seekable range
-      ["seekableRange", "getSeekable", "seekable", "getSeekableRange"].forEach((k) => {
-        if (pb[k] !== undefined) {
-          const v = typeof pb[k] === "function" ? pb[k]() : pb[k];
-          log(`A6 ${k}:`, JSON.stringify(v));
-        } else {
-          log(`A6 ${k}: unavailable`);
-        }
-      });
-
-      // Dump all keys so any DVR fields we missed surface
-      const allKeys = Object.keys(pb);
-      log("A6 activePlayback key count:", allKeys.length);
-      log("A6 activePlayback all keys:", allKeys.join(", "));
-    };
-
-    document.getElementById("loadAlt").onclick = () => {
-      const altUrl = document.getElementById("altUrl").value.trim();
-      if (!altUrl) { log("A6: enter an alt URL first"); return; }
-      document.getElementById("url").value = altUrl;
-      document.getElementById("load").click();
-    };
-
-    // ── A8: Quality levels ─────────────────────────────────────────────
-    document.getElementById("probeLevels").onclick = () => {
-      log("=== A8: Probe quality levels ===");
-      const pb = activePlayback();
-      if (!pb) { log("A8: no active playback"); return; }
-
-      const levels = pb?.levels;
-      log("A8 levels:", levels !== undefined ? JSON.stringify(levels) : "unavailable");
-      log("A8 currentLevel:", pb?.currentLevel !== undefined ? pb.currentLevel : "unavailable");
-    };
-
-    document.getElementById("setLevel0").onclick = () => {
-      const pb = activePlayback();
-      if (!pb) { log("A8: no active playback"); return; }
-      if (pb.currentLevel === undefined) { log("A8: currentLevel unavailable"); return; }
-      pb.currentLevel = 0;
-      log("A8 set currentLevel = 0; readback:", pb.currentLevel);
-    };
-
-    document.getElementById("setLevelAuto").onclick = () => {
-      const pb = activePlayback();
-      if (!pb) { log("A8: no active playback"); return; }
-      if (pb.currentLevel === undefined) { log("A8: currentLevel unavailable"); return; }
-      pb.currentLevel = -1;
-      log("A8 set currentLevel = -1 (auto); readback:", pb.currentLevel);
-    };
-
-    // ── D4: External subtitle source ───────────────────────────────────
-    function dumpExtTracks() {
-      log("--- D4 closedCaptionsTracks (hls.js) ---");
-      ccTracks().forEach((t, i) => log(`  cc[${i}] id=${t.id} name=${t.name} lang=${t.track?.language ?? t.language}`));
-      log("--- D4 <video>.textTracks (native) ---");
-      const v = document.querySelector("#player video");
-      if (v) [...v.textTracks].forEach((t, i) => log(`  vtt[${i}] kind=${t.kind} label=${t.label} lang=${t.language} mode=${t.mode} cues=${t.cues?.length ?? "null"}`));
+      for (const re of patterns) {
+        const m = s.match(re);
+        if (m) return m[1];
+      }
+      return "";
     }
-    document.getElementById("reloadExt").onclick = async () => {
-      const url = document.getElementById("url").value.trim();
-      const vtt = document.getElementById("extVtt").value.trim();
-      const lang = document.getElementById("extLang").value.trim() || "en-ext";
-      const field = document.getElementById("extField").value;
-      log("=== D4: Reload with external subtitle track ===");
-      if (!_mod) { log("D4: module not loaded — use Load first"); return; }
-      const { Player, MediaControl, SourceController, ClosedCaptions, Subtitles } = _mod;
-      [SourceController, MediaControl, ClosedCaptions].forEach((p) => { if (p) try { Player.registerPlugin(p); } catch (e) { /* already */ } });
-      if (Subtitles) { try { Player.registerPlugin(Subtitles); log("D4: registered Subtitles plugin"); } catch (e) { /* already */ } }
-      if (player) { try { player.destroy(); } catch (e) { /* ignore */ } player = null; }
-      const track = { kind: "subtitles", src: vtt, label: "External " + lang };
-      track[field] = lang;
-      const playbackCfg = { hlsjsConfig: { renderTextTracksNatively: true }, externalTracks: [track] };
-      log("D4 externalTracks (field=" + field + "):", JSON.stringify(playbackCfg.externalTracks));
-      player = new Player({ autoPlay: true, mute: true, sources: [{ source: url, mimeType: "application/x-mpegurl" }], playback: playbackCfg });
-      window.player = player;
-      attachErrorHandler();
-      player.on("ready", () => { log("D4 READY"); rebuildSubtitleButtons(); setTimeout(dumpExtTracks, 1800); });
-      player.attachTo(document.getElementById("player"));
-      log("D4: attached");
-    };
-    document.getElementById("dumpExt").onclick = dumpExtTracks;
-    document.getElementById("showExtNative").onclick = () => {
-      const v = document.querySelector("#player video");
-      if (!v) { log("D4: no video"); return; }
-      let shown = false;
-      [...v.textTracks].forEach((t) => {
-        if (t.language && t.language.includes("ext")) { t.mode = "showing"; shown = true; log("D4 set native textTrack showing:", t.label, t.language); }
-      });
-      if (!shown) log("D4: no ext native track found to show");
-      setTimeout(dumpExtTracks, 500);
-    };
 
-    // ── Shared helpers ─────────────────────────────────────────────────
-
-    // A2: attach error handler that logs RAW shape
-    function attachErrorHandler() {
-      if (!player) return;
-      player.on("error", (e) => {
-        log("A2 ERROR event — e.message:", e?.message ?? "unavailable");
-        try {
-          log("A2 ERROR raw shape:", JSON.stringify(e, Object.getOwnPropertyNames(e ?? {})));
-        } catch (_) {
-          log("A2 ERROR raw shape (fallback):", String(e));
-        }
+    // ── YT API bootstrap (mirrors probe-load-timing.html) ──────────────────────────
+    // Classic (non-module) injection pattern — sets window.onYouTubeIframeAPIReady,
+    // then appends <script src="https://www.youtube.com/iframe_api">.
+    function loadAPI() {
+      return new Promise((resolve) => {
+        if (window.YT && window.YT.Player) return resolve(window.YT);
+        window.onYouTubeIframeAPIReady = () => resolve(window.YT);
+        const s = document.createElement("script");
+        s.src = "https://www.youtube.com/iframe_api";
+        document.head.appendChild(s);
       });
     }
 
-    function rebuildSubtitleButtons() {
+    // ── Container helper ──────────────────────────────────────────────────────────
+    // YT.Player replaces #player with an <iframe>; player.destroy() removes the iframe.
+    // resetContainer() destroys the active player and recreates the bare #player div
+    // so the next YT.Player call has a fresh target.
+    function resetContainer() {
+      if (activePlayer) {
+        try { activePlayer.destroy(); } catch (e) { /* ignore */ }
+        activePlayer = null;
+      }
+      document.getElementById("player-wrap").innerHTML = '<div id="player"></div>';
+    }
+
+    // ── Standard event handlers ────────────────────────────────────────────────────
+    function makeEvents(label) {
+      return {
+        onReady: (ev) => {
+          const dur  = safeGet(() => ev.target.getDuration());
+          const vol  = safeGet(() => ev.target.getVolume());
+          const muted = safeGet(() => ev.target.isMuted());
+          log(`[${label}] onReady — duration=${dur} vol=${vol} isMuted=${muted}`);
+          refreshReadout();
+        },
+        onStateChange: (ev) => {
+          const name = STATE[String(ev.data)] ?? String(ev.data);
+          log(`[${label}] onStateChange: ${name} (${ev.data})`);
+          refreshReadout();
+        },
+        onError: (ev) => {
+          const code = ev.data;
+          const msg  = YT_ERROR_MESSAGES[code] ?? `Unknown error code ${code}`;
+          log(`[${label}] onError: code=${code} — ${msg}`);
+        },
+        onPlaybackQualityChange: (ev) => {
+          log(`[${label}] onPlaybackQualityChange: quality="${ev.data}"`);
+        },
+      };
+    }
+
+    // ── Safe API call helper ───────────────────────────────────────────────────────
+    function safeGet(fn) {
+      try { return fn(); } catch (e) { return `(err:${e.message})`; }
+    }
+    function safeCall(label, fn) {
+      try { fn(); } catch (e) { log(`${label}: error — ${e.message}`); }
+    }
+
+    // ── Readout polling ────────────────────────────────────────────────────────────
+    setInterval(() => { refreshReadout(); }, 500);
+    function refreshReadout() {
+      if (!activePlayer) {
+        document.getElementById("readout").textContent = "time: — / —";
+        document.getElementById("audio-readout").textContent = "—";
+        return;
+      }
+      const cur = safeGet(() => activePlayer.getCurrentTime().toFixed(1));
+      const dur = safeGet(() => activePlayer.getDuration().toFixed(1));
+      document.getElementById("readout").textContent = `time: ${cur}s / ${dur}s`;
+      const vol   = safeGet(() => activePlayer.getVolume());
+      const muted = safeGet(() => activePlayer.isMuted());
+      document.getElementById("audio-readout").textContent = `vol=${vol} isMuted=${muted}`;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Main Load
+    // ════════════════════════════════════════════════════════════════════════════
+    document.getElementById("btn-load").onclick = async () => {
+      const raw = document.getElementById("video-input").value.trim();
+      const id  = extractVideoId(raw);
+      if (!id) { log(`Load: could not extract a video id from: "${raw}"`); return; }
+
+      const forceRebuild = document.getElementById("chk-rebuild").checked;
+      log(`Load: id="${id}" forceRebuild=${forceRebuild}`);
+
+      const YT = await loadAPI();
+
+      if (activePlayer && !forceRebuild) {
+        log(`Load: reusing player — loadVideoById("${id}")`);
+        safeCall("Load:loadVideoById", () => activePlayer.loadVideoById(id));
+        return;
+      }
+
+      log(`Load: building new YT.Player for id="${id}"`);
+      resetContainer(); // destroys old player, recreates #player div
+      activePlayer = new YT.Player("player", {
+        width: 640,
+        height: 360,
+        videoId: id,
+        playerVars: { autoplay: 1, mute: 1, playsinline: 1, rel: 0, controls: 1 },
+        events: makeEvents("main"),
+      });
+      window.activePlayer = activePlayer;
+    };
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Playback controls (mirror plugin OnPlay / OnPause / OnSeek ACEs)
+    // ════════════════════════════════════════════════════════════════════════════
+    document.getElementById("btn-play").onclick = () => {
+      if (!activePlayer) { log("Play: no player"); return; }
+      log("Play: playVideo()");
+      safeCall("Play", () => activePlayer.playVideo());
+    };
+    document.getElementById("btn-pause").onclick = () => {
+      if (!activePlayer) { log("Pause: no player"); return; }
+      log("Pause: pauseVideo()");
+      safeCall("Pause", () => activePlayer.pauseVideo());
+    };
+    document.getElementById("btn-seek-back").onclick = () => {
+      if (!activePlayer) { log("Seek: no player"); return; }
+      const t = safeGet(() => activePlayer.getCurrentTime() - 10);
+      log(`Seek: seekTo(${t}, true)`);
+      safeCall("Seek-10", () => activePlayer.seekTo(t, true));
+    };
+    document.getElementById("btn-seek-fwd").onclick = () => {
+      if (!activePlayer) { log("Seek: no player"); return; }
+      const t = safeGet(() => activePlayer.getCurrentTime() + 10);
+      log(`Seek: seekTo(${t}, true)`);
+      safeCall("Seek+10", () => activePlayer.seekTo(t, true));
+    };
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Audio controls (mirror OnMute / OnUnmute / OnSetVolume ACEs)
+    // Plugin uses 0..100 at the API level (ElementHandler.ts setVolume(vol*100)).
+    // ════════════════════════════════════════════════════════════════════════════
+    document.getElementById("btn-mute").onclick = () => {
+      if (!activePlayer) { log("Mute: no player"); return; }
+      log("Mute: mute()");
+      safeCall("Mute", () => activePlayer.mute());
+      refreshReadout();
+    };
+    document.getElementById("btn-unmute").onclick = () => {
+      if (!activePlayer) { log("Unmute: no player"); return; }
+      log("Unmute: unMute()");
+      safeCall("Unmute", () => activePlayer.unMute());
+      refreshReadout();
+    };
+    document.getElementById("btn-vol0").onclick = () => {
+      if (!activePlayer) { log("Vol: no player"); return; }
+      log("Vol: setVolume(0)");
+      safeCall("setVolume(0)", () => activePlayer.setVolume(0));
+      refreshReadout();
+    };
+    document.getElementById("btn-vol50").onclick = () => {
+      if (!activePlayer) { log("Vol: no player"); return; }
+      log("Vol: setVolume(50)");
+      safeCall("setVolume(50)", () => activePlayer.setVolume(50));
+      refreshReadout();
+    };
+    document.getElementById("btn-vol100").onclick = () => {
+      if (!activePlayer) { log("Vol: no player"); return; }
+      log("Vol: setVolume(100)");
+      safeCall("setVolume(100)", () => activePlayer.setVolume(100));
+      refreshReadout();
+    };
+    document.getElementById("btn-get-audio").onclick = () => {
+      if (!activePlayer) { log("Audio: no player"); return; }
+      const vol   = safeGet(() => activePlayer.getVolume());
+      const muted = safeGet(() => activePlayer.isMuted());
+      log(`Audio: getVolume()=${vol} isMuted()=${muted}`);
+      refreshReadout();
+    };
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Resize controls (mirror OnResize / setSize ACE)
+    // ════════════════════════════════════════════════════════════════════════════
+    document.getElementById("btn-size-large").onclick = () => {
+      if (!activePlayer) { log("Resize: no player"); return; }
+      log("Resize: setSize(640, 360)");
+      safeCall("setSize(640,360)", () => activePlayer.setSize(640, 360));
+    };
+    document.getElementById("btn-size-small").onclick = () => {
+      if (!activePlayer) { log("Resize: no player"); return; }
+      log("Resize: setSize(320, 180)");
+      safeCall("setSize(320,180)", () => activePlayer.setSize(320, 180));
+    };
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Probe: Loop survival
+    // Does loop:1 survive a loadVideoById() call with a different video id?
+    // (docs/youtube-player-api.md: playerVars are build-time only)
+    // ════════════════════════════════════════════════════════════════════════════
+    document.getElementById("btn-probe-loop-build").onclick = async () => {
+      const id = extractVideoId(document.getElementById("probe-loop-id").value.trim());
+      if (!id) { log("Loop probe: invalid video id"); return; }
+      log(`Loop probe: building player with loop:1, playlist:${id} for id="${id}"`);
+      const YT = await loadAPI();
+      resetContainer();
+      activePlayer = new YT.Player("player", {
+        width: 640,
+        height: 360,
+        videoId: id,
+        playerVars: { autoplay: 1, mute: 1, playsinline: 1, rel: 0, loop: 1, playlist: id },
+        events: makeEvents("loop-probe"),
+      });
+      window.activePlayer = activePlayer;
+      log("Loop probe: player built — play to confirm looping, then click 'loadVideoById(alt id)'");
+    };
+
+    document.getElementById("btn-probe-loop-switch").onclick = () => {
+      if (!activePlayer) { log("Loop probe: build the looping player first"); return; }
+      const altId = extractVideoId(document.getElementById("probe-loop-alt").value.trim());
+      if (!altId) { log("Loop probe: invalid alt id"); return; }
+      log(`Loop probe: loadVideoById("${altId}") — does loop survive? Watch for ENDED vs re-PLAYING`);
+      safeCall("Loop probe: loadVideoById", () => activePlayer.loadVideoById(altId));
+    };
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Probe: modestbranding
+    // YouTube removed this parameter in 2023 — both builds should look identical.
+    // ════════════════════════════════════════════════════════════════════════════
+    async function buildModest(withModest) {
+      const id = extractVideoId(document.getElementById("video-input").value.trim()) || "M7lc1UVf-VE";
+      const YT = await loadAPI();
+      resetContainer();
+      const vars = { autoplay: 1, mute: 1, playsinline: 1, rel: 0, controls: 1 };
+      if (withModest) vars.modestbranding = 1;
+      log(`modestbranding probe: building with modestbranding=${withModest ? 1 : "(omitted)"} for id="${id}"`);
+      log("modestbranding probe: observe the YouTube logo / branding in both builds — expect no visible difference");
+      activePlayer = new YT.Player("player", {
+        width: 640,
+        height: 360,
+        videoId: id,
+        playerVars: vars,
+        events: makeEvents("modest-probe"),
+      });
+      window.activePlayer = activePlayer;
+    }
+    document.getElementById("btn-probe-modest-on").onclick = () => buildModest(true);
+    document.getElementById("btn-probe-modest-off").onclick = () => buildModest(false);
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Probe: Autoplay unmute
+    // On first PLAYING, call unMute() without a user gesture. Does the browser
+    // autoplay policy allow it? (feeds issue #4 / docs/youtube-player-api.md)
+    // ════════════════════════════════════════════════════════════════════════════
+    document.getElementById("btn-probe-autoplay-build").onclick = async () => {
+      const id = extractVideoId(document.getElementById("video-input").value.trim()) || "M7lc1UVf-VE";
+      const YT = await loadAPI();
+      resetContainer();
+      log(`Autoplay-unmute probe: building autoplay+muted player for id="${id}"`);
+      log("Autoplay-unmute probe: will call unMute() on first PLAYING event (no user gesture)");
+
+      let unmuteAttempted = false;
+      activePlayer = new YT.Player("player", {
+        width: 640,
+        height: 360,
+        videoId: id,
+        playerVars: { autoplay: 1, mute: 1, playsinline: 1, rel: 0, controls: 1 },
+        events: {
+          onReady: (ev) => {
+            const muted = safeGet(() => ev.target.isMuted());
+            log(`[autoplay-probe] onReady — isMuted()=${muted} (expect true: started muted)`);
+            refreshReadout();
+          },
+          onStateChange: (ev) => {
+            const name = STATE[String(ev.data)] ?? String(ev.data);
+            log(`[autoplay-probe] onStateChange: ${name} (${ev.data})`);
+            if (ev.data === 1 && !unmuteAttempted) {
+              unmuteAttempted = true;
+              log("[autoplay-probe] first PLAYING — attempting unMute() without user gesture...");
+              try {
+                activePlayer.unMute();
+                const stillMuted = safeGet(() => activePlayer.isMuted());
+                log(`[autoplay-probe] autoplay-unmute result: isMuted()=${stillMuted}` +
+                    ` (false=audio permitted, true=blocked by autoplay policy)`);
+              } catch (e) {
+                log(`[autoplay-probe] unMute() threw: ${e.message}`);
+              }
+            }
+            refreshReadout();
+          },
+          onError: (ev) => {
+            const code = ev.data;
+            const msg  = YT_ERROR_MESSAGES[code] ?? `Unknown error code ${code}`;
+            log(`[autoplay-probe] onError: code=${code} — ${msg}`);
+          },
+          onPlaybackQualityChange: (ev) => {
+            log(`[autoplay-probe] onPlaybackQualityChange: quality="${ev.data}"`);
+          },
+        },
+      });
+      window.activePlayer = activePlayer;
+    };
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Probe: Captions
+    // Uses unofficial setOption/getOption captions module. All calls guarded in
+    // try/catch so a missing/broken module doesn't break the harness.
+    // (feeds issue #6 / docs/youtube-player-api.md)
+    // ════════════════════════════════════════════════════════════════════════════
+    document.getElementById("btn-probe-cc-build").onclick = async () => {
+      const lang = document.getElementById("probe-cc-lang").value.trim() || "en";
+      const id   = extractVideoId(document.getElementById("video-input").value.trim()) || "M7lc1UVf-VE";
+      const YT   = await loadAPI();
+      resetContainer();
+      log(`Captions probe: building with cc_load_policy:1, cc_lang_pref:"${lang}", id="${id}"`);
+      activePlayer = new YT.Player("player", {
+        width: 640,
+        height: 360,
+        videoId: id,
+        playerVars: {
+          autoplay: 1, mute: 1, playsinline: 1, rel: 0, controls: 1,
+          cc_load_policy: 1, cc_lang_pref: lang,
+        },
+        events: makeEvents("cc-probe"),
+      });
+      window.activePlayer = activePlayer;
+    };
+
+    document.getElementById("btn-probe-cc-set-track").onclick = () => {
+      if (!activePlayer) { log("Captions: no player — use Build first"); return; }
+      const lang = document.getElementById("probe-cc-set-lang").value.trim() || "en";
+      log(`Captions: setOption("captions","track",{languageCode:"${lang}"})`);
+      try {
+        activePlayer.setOption("captions", "track", { languageCode: lang });
+        log("Captions: setOption track — succeeded (no return value)");
+      } catch (e) {
+        log(`Captions: setOption track error — ${e.message} (unofficial module may be absent)`);
+      }
+    };
+
+    document.getElementById("btn-probe-cc-reload").onclick = () => {
+      if (!activePlayer) { log("Captions: no player — use Build first"); return; }
+      log('Captions: setOption("captions","reload",true)');
+      try {
+        activePlayer.setOption("captions", "reload", true);
+        log("Captions: setOption reload — succeeded");
+      } catch (e) {
+        log(`Captions: setOption reload error — ${e.message}`);
+      }
+    };
+
+    document.getElementById("btn-probe-cc-get-tracklist").onclick = () => {
+      if (!activePlayer) { log("Captions: no player — use Build first"); return; }
+      log('Captions: getOption("captions","tracklist")');
+      try {
+        const result = activePlayer.getOption("captions", "tracklist");
+        log(`Captions: tracklist = ${JSON.stringify(result)}`);
+      } catch (e) {
+        log(`Captions: getOption tracklist error — ${e.message}`);
+      }
+    };
+
+    document.getElementById("btn-probe-cc-get-track").onclick = () => {
+      if (!activePlayer) { log("Captions: no player — use Build first"); return; }
+      log('Captions: getOption("captions","track")');
+      try {
+        const result = activePlayer.getOption("captions", "track");
+        log(`Captions: current track = ${JSON.stringify(result)}`);
+      } catch (e) {
+        log(`Captions: getOption track error — ${e.message}`);
+      }
+    };
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Probe: Quality (advisory/deprecated)
+    // Advisory only — numeric ABR quality ACEs were retired (ADR-0004).
+    // ════════════════════════════════════════════════════════════════════════════
+    document.getElementById("btn-probe-q-levels").onclick = () => {
+      if (!activePlayer) { log("Quality: no player"); return; }
+      log("Quality: getAvailableQualityLevels()");
+      try {
+        const levels = activePlayer.getAvailableQualityLevels();
+        log(`Quality: available levels = ${JSON.stringify(levels)}`);
+      } catch (e) {
+        log(`Quality: getAvailableQualityLevels error — ${e.message}`);
+      }
+    };
+
+    document.getElementById("btn-probe-q-current").onclick = () => {
+      if (!activePlayer) { log("Quality: no player"); return; }
+      log("Quality: getPlaybackQuality()");
+      try {
+        const q = activePlayer.getPlaybackQuality();
+        log(`Quality: current quality = "${q}"`);
+      } catch (e) {
+        log(`Quality: getPlaybackQuality error — ${e.message}`);
+      }
+    };
+
+    document.getElementById("btn-probe-q-set").onclick = () => {
+      if (!activePlayer) { log("Quality: no player"); return; }
+      const level = document.getElementById("probe-q-level").value.trim();
+      log(`Quality: setPlaybackQuality("${level}") — advisory, likely ignored`);
+      try {
+        activePlayer.setPlaybackQuality(level);
+        const after = safeGet(() => activePlayer.getPlaybackQuality());
+        log(`Quality: after setPlaybackQuality, getPlaybackQuality()="${after}"`);
+      } catch (e) {
+        log(`Quality: setPlaybackQuality error — ${e.message}`);
+      }
+    };
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Auto-load on page ready (mirrors probe-load-timing.html setTimeout(run,1000))
+    // ════════════════════════════════════════════════════════════════════════════
+    window.addEventListener("load", () => {
       setTimeout(() => {
-        const c = document.getElementById("controls");
-        c.innerHTML = "";
-        const tracks = ccTracks();
-        if (!tracks.length) { c.textContent = "(no subtitle tracks in this manifest)"; return; }
-        tracks.forEach((t) => {
-          const b = document.createElement("button");
-          b.textContent = `${t.name || (t.track && t.track.language) || t.id}`;
-          b.onclick = () => selectTrack(t.id);
-          c.appendChild(b);
-        });
-        log("subtitle tracks:", tracks.length);
-      }, 600);
-    }
-
-    // ── Main Load ──────────────────────────────────────────────────────
-    document.getElementById("load").onclick = async () => {
-      logEl.textContent = "";
-      const url = document.getElementById("url").value.trim();
-      log("importing", PLAYER_URL, "...");
-      let mod;
-      try { mod = await import(PLAYER_URL); }
-      catch (e) { log("MODULE IMPORT FAILED:", e.message, "\n(serve this page over http://, not file://)"); return; }
-      _mod = mod;
-
-      // ── A7: Log available exports ────────────────────────────────────
-      log("A7 module exports (Object.keys(mod)):", Object.keys(mod).join(", "));
-
-      const {
-        Player, MediaControl, SourceController, ClosedCaptions,
-        PlayerEvent,
-        BottomGear, Spinner, ErrorScreen, ClapprNerdStats, LevelSelector, QualityLevels,
-      } = mod;
-
-      // ── A7: Log which named chrome plugins exist ──────────────────────
-      const chromeNames = ["BottomGear", "Spinner", "MediaControl", "ErrorScreen", "ClapprNerdStats", "LevelSelector", "ClosedCaptions", "QualityLevels"];
-      chromeNames.forEach((name) => {
-        log(`A7 export ${name}:`, mod[name] !== undefined ? "EXISTS" : "missing");
-      });
-
-      // ── Log available event names ─────────────────────────────────────
-      if (PlayerEvent) {
-        log("PlayerEvent keys:", Object.keys(PlayerEvent).join(", "));
-      } else {
-        log("PlayerEvent: not exported");
-      }
-
-      // ── Register plugins ──────────────────────────────────────────────
-      [SourceController, MediaControl, ClosedCaptions].forEach((p) => {
-        if (p) try { Player.registerPlugin(p); } catch (e) { log("registerPlugin err:", e.message); }
-      });
-
-      // A7: optionally register chrome plugins
-      if (document.getElementById("registerChrome").checked) {
-        log("A7: registering BottomGear and Spinner (registerChrome checked)");
-        [BottomGear, Spinner].forEach((p) => {
-          if (p) try { Player.registerPlugin(p); log("A7 registered:", p.name ?? p); } catch (e) { log("A7 registerPlugin err:", e.message); }
-          else log("A7: plugin not available (undefined)");
-        });
-      }
-
-      // ── A8: attach level-change event listeners using PlayerEvent keys ─
-      if (PlayerEvent) {
-        const levelEventCandidates = Object.keys(PlayerEvent).filter((k) =>
-          /level|quality|bitrate/i.test(k)
-        );
-        log("A8 candidate level/quality event keys:", levelEventCandidates.join(", ") || "(none)");
-        // We'll attach these after player is created below
-      }
-
-      if (player) { try { player.destroy(); } catch (e) { /* ignore */ } player = null; }
-      player = new Player({
-        autoPlay: true,
-        mute: true,
-        sources: [{ source: url, mimeType: "application/x-mpegurl" }],
-        playback: { hlsjsConfig: { renderTextTracksNatively: true } },
-      });
-      window.player = player; // for console poking
-
-      // A2: error handler logging full shape
-      attachErrorHandler();
-
-      // A8: attach level/quality event listeners
-      if (PlayerEvent) {
-        Object.keys(PlayerEvent).filter((k) => /level|quality|bitrate/i.test(k)).forEach((k) => {
-          try {
-            player.on(PlayerEvent[k], (...args) => {
-              log(`A8 event ${k} (${PlayerEvent[k]}):`, JSON.stringify(args));
-            });
-          } catch (e) { /* ignore */ }
-        });
-      }
-
-      player.on("ready", () => {
-        log("=== READY === (subtitle tracks appear ~0.2s later; selection sticks once playback is ~2s in)");
-        log("activePlayback.name:", activePlayback()?.name ?? "unavailable");
-        rebuildSubtitleButtons();
-      });
-      player.attachTo(document.getElementById("player"));
-      log("attached; autoplay starting...");
-    };
+        log("Auto-loading default video on page ready...");
+        document.getElementById("btn-load").click();
+      }, 500);
+    });
   </script>
 </body>
 </html>
