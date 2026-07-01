@@ -1,5 +1,6 @@
 {
   "enabledPlugins": {
-    "genvid-c3@genvid-plugins": true
+    "gvt-construct3@genvid-plugins": true,
+    "playwright@claude-plugins-official": true
   }
 }
