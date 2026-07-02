@@ -441,6 +441,9 @@
         mute: this.lastMuted ? 1 : 0,
         cc_load_policy: this.subtitleLang !== "off" ? 1 : 0,
       };
+      if (this.subtitleLang !== "off") {
+        vars["cc_lang_pref"] = this.subtitleLang; // prefer this caption language at load
+      }
       if (this.loop) {
         vars["loop"] = 1;
         vars["playlist"] = videoId; // YouTube requires playlist=videoId for single-video loop
