@@ -132,6 +132,7 @@
       /youtu\.be\/([A-Za-z0-9_-]{11})/,
       /\/embed\/([A-Za-z0-9_-]{11})/,
       /\/shorts\/([A-Za-z0-9_-]{11})/,
+      /\/live\/([A-Za-z0-9_-]{11})/,
       /\/v\/([A-Za-z0-9_-]{11})/,
     ];
     for (const re of patterns) {
