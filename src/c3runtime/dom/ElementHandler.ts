@@ -281,13 +281,13 @@
       this.enableChrome = (e["enableChrome"] ?? true) as boolean;
       this.loop = (e["loop"] ?? false) as boolean;
       this.start = (e["start"] ?? 0) as number;
-      // TODO(youtube): map the remaining incoming state — subtitles selection —
-      // onto YouTube IFrame player options. Tracked in the repo's GitHub issues.
 
       if (this.currentUrl === url) {
         // URL unchanged — apply lightweight changes (e.g. chrome/controls) to
         // the existing player without rebuilding it.
-        // TODO(youtube): apply live chrome/subtitle changes here.
+        // TODO(youtube): apply live chrome changes here. Subtitle language is
+        // construction-time only (cc_lang_pref via Load Video) by design —
+        // live caption switching is a future issue.
         return false;
       }
 
@@ -441,6 +441,9 @@
         mute: this.lastMuted ? 1 : 0,
         cc_load_policy: this.subtitleLang !== "off" ? 1 : 0,
       };
+      if (this.subtitleLang !== "off") {
+        vars["cc_lang_pref"] = this.subtitleLang; // prefer this caption language at load
+      }
       if (this.loop) {
         vars["loop"] = 1;
         vars["playlist"] = videoId; // YouTube requires playlist=videoId for single-video loop
