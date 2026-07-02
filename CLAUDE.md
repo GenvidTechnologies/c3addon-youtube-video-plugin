@@ -55,6 +55,17 @@ When serving it to drive the Playwright MCP, start `http-server` with the Bash
 tool's `run_in_background` (then `TaskStop` when done); a trailing `&` job is
 reaped when the tool call returns, so the next navigate hits connection-refused.
 
+Two caveats on what the harness actually verifies. First, it **reimplements** pure
+helpers like `extractVideoId` verbatim rather than importing them — it does *not*
+execute `src/c3runtime/dom/ElementHandler.ts` — so loading it exercises the parsing
+*mirror*, **not** any runtime-only ElementHandler change (new logging, state
+transitions, the awaitable-load path). Keep the two copies in lockstep; a `diff` of
+the pattern arrays catches drift. Second, "the only real check is a browser" is
+about player-*internal* behavior (playback, sizing, captions, timing) — a pure
+deterministic helper like `extractVideoId` is fully verifiable in Node (run a URL
+corpus through the same logic, plus a mirror-parity `diff`), which is the fallback
+when the Playwright MCP is unavailable.
+
 > **Playwright MCP availability.** The `browser_*` tools come from the `playwright`
 > Claude Code plugin — if they're absent, install/enable it via `/plugin` instead
 > of falling back to a hand-built user-run probe.
