@@ -30,14 +30,5 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Exps =
 	},
 	GetEnableChrome(this:SDKInstanceClass) {
 		return this._GetEnableChrome();
-	},
-	GetSubtitleCount(this:SDKInstanceClass) {
-		return this._GetSubtitleCount();
-	},
-	GetSubtitleLanguageAt(this:SDKInstanceClass, index: number) {
-		return this._GetSubtitleLanguageAt(index);
-	},
-	GetSubtitleLabelAt(this:SDKInstanceClass, index: number) {
-		return this._GetSubtitleLabelAt(index);
 	}
 };

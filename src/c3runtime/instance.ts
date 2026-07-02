@@ -20,16 +20,12 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 	_enableChrome: boolean = true;
 	_loop: boolean = false;
 	_start: number = 0;
-	_subtitleSources: Array<{ url: string; language: string; label: string }> = [];
 	_isInitialized = false;
 	_isReady = false;
 
 	_currentPlaybackTime = 0;
 	_currentVolume = -1;
 	_duration = -1;
-
-	// Subtitle track list — per-video; reset in _InitializeState.
-	_subtitleTracks: Array<{ language: string; label: string }> = [];
 
 	_playerState = "offline";
 	_audioState = "offline";
@@ -71,8 +67,7 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 			"subtitles": this._subtitles,
 			"enableChrome": this._enableChrome,
 			"loop": this._loop,
-			"start": this._start,
-			"subtitleSources": this._subtitleSources
+			"start": this._start
 		};
 	}
 
@@ -85,9 +80,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		this._currentPlaybackTime = 0;
 		this._currentVolume = -1;
 		this._duration = -1;
-
-		// Reset subtitle track list — per-video.
-		this._subtitleTracks = [];
 
 		this._playerState = "offline";
 		this._audioState = "offline";
@@ -143,13 +135,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 
 			if (state.duration !== undefined) {
 				this._duration = state.duration as number;
-			}
-
-			// Subtitle track list — only sent by the DOM side when it changed.
-			// Fire the dedicated trigger so the game can rebuild its subtitle menu.
-			if (state.subtitleTracks !== undefined) {
-				this._subtitleTracks = state.subtitleTracks as Array<{ language: string; label: string }>;
-				this._trigger(C3.Plugins.Genvidtech_YouTubeVideoPlugin.Cnds.OnSubtitlesAvailable);
 			}
 
 			// Mark the video as ready (loaded and playable) once its volume and
@@ -217,11 +202,10 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 
 		this._url = url;
 		// Loading a video starts with a clean subtitle slate: subtitles are no
-		// longer a SetURL parameter. Use SetSubtitles / AddSubtitleSource after
-		// loading. This also stops the previous video's subtitles (in-manifest
-		// selection and side-loaded sources) from leaking onto the new one.
+		// longer a SetURL parameter. Use SetSubtitles after loading. This also
+		// stops the previous video's subtitle selection from leaking onto the
+		// new one.
 		this._subtitles = "off";
-		this._subtitleSources = [];
 		// Drive the load over the async DOM bridge instead of the fire-and-forget
 		// _updateElementState(): the "loadVideo" handler returns a promise that
 		// resolves once the new video's metadata is loaded (or settles on
@@ -233,24 +217,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 
 	_GetURL() {
 		return this._url;
-	}
-
-	_AddSubtitleSource(url: string, language: string, label: string) {
-		this._subtitleSources = [...this._subtitleSources, { url, language, label }];
-		this._updateElementState();
-	}
-
-	async _AddProjectSubtitleSource(file: string, language: string, label: string) {
-		// Resolve the project file to a runtime URL, then add it like a normal
-		// external subtitle source.
-		let url: string;
-		try {
-			url = await this.runtime.assets.getProjectFileUrl(file);
-		} catch (e) {
-			console.error("[YouTubeVideo] Could not resolve project file", file, e);
-			return;
-		}
-		this._AddSubtitleSource(url, language, label);
 	}
 
 	_SetSubtitles(language?: string) {
@@ -281,32 +247,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		return this._enableChrome ? 1 : 0;
 	}
 
-	_HasSubtitles() {
-		return this._subtitleTracks.length > 0;
-	}
-
-	_HasSubtitleLanguage(lang: string) {
-		const l = (lang ?? "").toLowerCase();
-		return this._subtitleTracks.some(t => t.language.toLowerCase() === l);
-	}
-
-	_HasSubtitleLabel(label: string) {
-		const l = (label ?? "").toLowerCase();
-		return this._subtitleTracks.some(t => t.label.toLowerCase() === l);
-	}
-
-	_GetSubtitleCount() {
-		return this._subtitleTracks.length;
-	}
-
-	_GetSubtitleLanguageAt(index: number) {
-		return this._subtitleTracks[index]?.language ?? "";
-	}
-
-	_GetSubtitleLabelAt(index: number) {
-		return this._subtitleTracks[index]?.label ?? "";
-	}
-
 	_saveToJson() {
 		// TODO: Add more state in it?
 		return {
@@ -315,8 +255,7 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 			"subtitles": this._subtitles,
 			"enableChrome": this._enableChrome,
 			"loop": this._loop,
-			"start": this._start,
-			"subtitleSources": this._subtitleSources
+			"start": this._start
 		};
 	}
 
@@ -327,7 +266,6 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		this._enableChrome = (o["enableChrome"] ?? true) as boolean;
 		this._loop = (o["loop"] ?? false) as boolean;
 		this._start = (o["start"] ?? 0) as number;
-		this._subtitleSources = (o["subtitleSources"] ?? []) as Array<{ url: string; language: string; label: string }>;
 
 		this._updateElementState();		// ensures any state changes are updated in the DOM
 	}
@@ -345,15 +283,13 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 					{ name: prefix + "enableChrome", value: this._enableChrome, onedit: v => this._SetEnableChrome(v as boolean) },
 					{ name: prefix + "loop", value: this._loop },
 					{ name: prefix + "start", value: this._start },
-					{ name: prefix + "subtitleSources", value: this._subtitleSources.length },
 					{ name: prefix + "playbackTime", value: this._currentPlaybackTime, onedit: v => this._SetPlaybackTime(v as number) },
 					{ name: prefix + "volume", value: this._currentVolume, onedit: v => this._SetVolume(v as number) },
 					{ name: prefix + "duration", value: this._duration },
 					{ name: prefix + "playerState", value: this._playerState },
 					{ name: prefix + "audioState", value: this._audioState },
 					{ name: prefix + "lastErrorCategory", value: this._lastError.category as string },
-					{ name: prefix + "lastErrorMessage", value: this._lastError.message as string },
-					{ name: prefix + "subtitleTracks", value: this._subtitleTracks.length }
+					{ name: prefix + "lastErrorMessage", value: this._lastError.message as string }
 				]
 			},
 		];

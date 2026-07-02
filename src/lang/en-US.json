@@ -15,7 +15,7 @@
 					},
 					"video-subtitles": {
 						"name": "Subtitles",
-						"desc": "The subtitles language for subtitles. \"off\" to turn them off."
+						"desc": "The subtitles language for subtitles. \"off\" to turn them off. Applies when the player is built (set before the video URL); not changed live."
 					},
 					"enable-chrome": {
 						"name": "Enable Chrome",
@@ -78,38 +78,6 @@
 						"list-name": "Is offline",
 						"display-text": "Is offline",
 						"description": "Whether the video player is offline or not"
-					},
-					"has-subtitles": {
-						"list-name": "Has subtitles",
-						"display-text": "Has subtitles",
-						"description": "Whether any subtitle tracks are available (in-manifest or side-loaded)."
-					},
-					"has-subtitle-language": {
-						"list-name": "Has subtitle language",
-						"display-text": "Has subtitle language {0}",
-						"description": "Whether a subtitle track with the given language is available (case-insensitive).",
-						"params": {
-							"lang": {
-								"name": "Language",
-								"desc": "BCP-47 language code to look for (e.g. \"en\", \"fr\", \"en-ext\")."
-							}
-						}
-					},
-					"has-subtitle-label": {
-						"list-name": "Has subtitle label",
-						"display-text": "Has subtitle label {0}",
-						"description": "Whether a subtitle track with the given label is available (case-insensitive).",
-						"params": {
-							"label": {
-								"name": "Label",
-								"desc": "Subtitle track label to look for (e.g. \"English\")."
-							}
-						}
-					},
-					"on-subtitles-available": {
-						"list-name": "On subtitles available",
-						"display-text": "On subtitles available",
-						"description": "Triggered when the subtitle track list becomes known or changes."
 					}
 				},
 				"actions": {
@@ -159,7 +127,7 @@
 					"set-url": {
 						"list-name": "Load Video",
 						"display-text": "Load video at {0}",
-						"description": "Set the Video Player URL. Loading a video clears the current subtitle selection and any side-loaded subtitle sources; use Set Subtitles / Add Subtitle Source afterwards.",
+						"description": "Set the Video Player URL. Loading a video clears the current subtitle selection; use Set Subtitles afterwards.",
 						"params": {
 							"url": {
 								"name": "URL",
@@ -170,7 +138,7 @@
 					"set-subtitles": {
 						"list-name": "Set Subtitles",
 						"display-text": "Set Subtitles to {0}",
-						"description": "Set the subtitles for the video.",
+						"description": "Set the preferred subtitles/caption language. Applied when the video is next loaded (the player is rebuilt), not live to the current video. Use \"off\" to disable captions.",
 						"params": {
 							"language": {
 								"name": "Language",
@@ -186,44 +154,6 @@
 							"enable": {
 								"name": "Enable",
 								"desc": "True to show the built-in control bar; false to hide it."
-							}
-						}
-					},
-					"add-subtitle-source": {
-						"list-name": "Add Subtitle Source",
-						"display-text": "Add subtitle source {0} (language {1}, label {2})",
-						"description": "Add an external subtitle track (by URL) to the player, injected alongside any in-manifest tracks. Call AFTER Load Video (loading a video clears side-loaded sources); then select it with Set Subtitles using its language.",
-						"params": {
-							"url": {
-								"name": "URL",
-								"desc": "URL of the external subtitle file (e.g. a .vtt file)."
-							},
-							"language": {
-								"name": "Language",
-								"desc": "BCP-47 language code for the track (e.g. \"en\", \"fr\"). Use a tag distinct from the in-manifest tracks (e.g. \"en-ext\")."
-							},
-							"label": {
-								"name": "Label",
-								"desc": "Human-readable label shown in the subtitle selector (e.g. \"English\")."
-							}
-						}
-					},
-					"add-project-subtitle-source": {
-						"list-name": "Add Project Subtitle Source",
-						"display-text": "Add project subtitle source {0} (language {1}, label {2})",
-						"description": "Add an external subtitle track from a project file. The file is resolved to a URL at runtime, then injected like Add Subtitle Source. Call AFTER Load Video; select it with Set Subtitles using its language.",
-						"params": {
-							"file": {
-								"name": "Project file",
-								"desc": "Name of the subtitle project file (e.g. \"subtitles.vtt\")."
-							},
-							"language": {
-								"name": "Language",
-								"desc": "BCP-47 language code for the track (e.g. \"en\", \"fr\"). Use a tag distinct from the in-manifest tracks (e.g. \"en-ext\")."
-							},
-							"label": {
-								"name": "Label",
-								"desc": "Human-readable label shown in the subtitle selector (e.g. \"English\")."
 							}
 						}
 					},
@@ -269,30 +199,6 @@
 					"get-enable-chrome": {
 						"description": "Whether the YouTube player control bar (player built-in UI) is enabled.",
 						"translated-name": "GetEnableChrome"
-					},
-					"get-subtitle-count": {
-						"description": "The number of available subtitle tracks (in-manifest + side-loaded).",
-						"translated-name": "GetSubtitleCount"
-					},
-					"get-subtitle-language-at": {
-						"description": "The language code of the subtitle track at the given index.",
-						"translated-name": "GetSubtitleLanguageAt",
-						"params": {
-							"index": {
-								"name": "Index",
-								"desc": "Zero-based index into the subtitle track list (0 to GetSubtitleCount-1)."
-							}
-						}
-					},
-					"get-subtitle-label-at": {
-						"description": "The human-readable label of the subtitle track at the given index.",
-						"translated-name": "GetSubtitleLabelAt",
-						"params": {
-							"index": {
-								"name": "Index",
-								"desc": "Zero-based index into the subtitle track list (0 to GetSubtitleCount-1)."
-							}
-						}
 					}
 				},
 				"debugger": {
@@ -308,9 +214,7 @@
 					"playerState": "Player State",
 					"audioState": "Audio State",
 					"lastErrorCategory": "Last Error Category",
-					"lastErrorMessage": "Last Error Message",
-					"subtitleSources": "External Subtitle Source Count",
-					"subtitleTracks": "Subtitle Track Count"
+					"lastErrorMessage": "Last Error Message"
 				}
 			}
 		}

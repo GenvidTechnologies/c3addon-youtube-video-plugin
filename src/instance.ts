@@ -41,8 +41,10 @@ PLUGIN_CLASS.Instance = class YouTubeVideoInstance extends SDK.IWorldInstanceBas
 		this._webglText.SetSize(this._inst.GetWidth(), this._inst.GetHeight(), textZoom);
 
 		// Show the raw video URL as the editor placeholder. Subtitles are
-		// handled via the v2 player API at runtime, not URL query params, so
-		// they are not appended here.
+		// controlled at runtime via the YouTube player's cc_load_policy /
+		// cc_lang_pref playerVars (set from the video-subtitles property /
+		// Set Subtitles action at player construction), not URL query params,
+		// so they play no part in this editor placeholder logic.
 		const url = this._inst.GetPropertyValue("video-url") as string;
 
 		this._webglText.SetText(url);
