@@ -1,10 +1,11 @@
 # YouTube Video Plugin — Usage Guide
 
-> **⚠️ Out of date — being rewritten for YouTube.** This guide still documents
-> the GCore-era ACE surface (manifest URLs, low-latency, DVR, in-manifest
-> subtitles). The plugin has been forked to the YouTube IFrame Player API and
-> the player integration is currently a scaffold/stub. The behavior described
-> below does not yet apply. Tracked in the repo's GitHub issues.
+> **⚠️ Partially out of date — being rewritten for YouTube.** Section 1
+> (Loading a video) below is current for the YouTube IFrame Player API. The
+> rest of this guide (subtitles, low latency, DVR, and the other ACEs) still
+> documents the GCore-era surface and does not yet apply to this fork; the
+> YouTube rewrite of those sections is tracked in
+> [issue #11](https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin/issues/11).
 
 **Audience:** Construct 3 game developers using the plugin's ACEs
 
@@ -16,47 +17,52 @@ and [`youtube-player-api.md`](youtube-player-api.md).
 
 ## 1. Loading a video
 
-Use the **Load Video** action. It takes two parameters:
+Use the **Load Video** action. It takes a single parameter:
 
 | Parameter | Type | Description |
 |---|---|---|
 | URL | string | The video URL (see accepted forms below) |
-| No low latency flag | boolean | `true` to use the non-low-latency stream (live only) |
 
 **Accepted URL forms:**
 
-- GCore embed URL for VOD: `https://player.gvideo.co/videos/<id>`
-- GCore embed URL for live: `https://player.gvideo.co/streams/<id>`
-- A direct manifest URL ending in `.m3u8` or `.mpd` — used as-is.
+- Bare video id (11 characters): `dQw4w9WgXcQ`
+- `https://www.youtube.com/watch?v=dQw4w9WgXcQ`
+- `https://youtu.be/dQw4w9WgXcQ`
+- `https://www.youtube.com/embed/dQw4w9WgXcQ`
+- `https://www.youtube.com/shorts/dQw4w9WgXcQ`
+- `https://www.youtube.com/v/dQw4w9WgXcQ`
+- `https://www.youtube.com/live/dQw4w9WgXcQ` — YouTube live-stream watch pages
 
-**How embed URLs resolve to CDN manifests:**
+These forms also work on `youtube-nocookie.com`, `m.youtube.com`, and
+`music.youtube.com` — the plugin matches on path/query shape, not hostname.
 
-The plugin converts embed URLs to the CDN manifest URL automatically. You do not
-need to construct the manifest URL yourself. The conversion follows these rules:
+`list=`, `t=`, `si=`, and `index=` query params are recognized but ignored — a
+share URL copied from inside a "Play all" queue
+(`watch?v=dQw4w9WgXcQ&list=PL…`) loads only the single video `dQw4w9WgXcQ`.
+Playlist loading and navigation are not yet supported; a playlist-only URL
+(`playlist?list=…`, no `v=`) has no extractable video id and the player stays
+offline — tracked in
+[issue #12](https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin/issues/12).
 
-| URL type | Resolved manifest |
-|---|---|
-| VOD embed (`/videos/<clientId>_<tok>`) | `https://<clientId>.gvideo.io/videos/<clientId>_<tok>/master.m3u8` |
-| Live embed, low-latency (default) | `https://<clientId>.gvideo.io/cmaf/<clientId>_<tok>/master.m3u8` |
-| Live embed, No low latency flag = true | `https://<clientId>.gvideo.io/mpegts/<clientId>_<tok>/master_mpegts.m3u8` |
+**Known limitation.** `attribution_link` URLs that bury a URL-encoded `v=`
+inside another query parameter (e.g. `...attribution_link?...u=%2Fwatch%3Fv%3DID...`)
+are not recognized. See
+[ADR-0006](decisions/0006-video-url-parsing-scope.md) for the full accepted-URL
+contract.
 
-DASH is available at `<clientId>.gvideo.io/cmaf/<id>/index.mpd` but the plugin
-uses HLS by default.
+**How the URL becomes a video.** The plugin extracts the video id directly from
+the URL text — there is no manifest-resolution step. Ignored params never
+affect which video loads, and the result is always exactly one video id.
 
 **Loading resets subtitle state.** Every call to Load Video clears the active
 subtitle selection and any side-loaded subtitle sources. Always call subtitle
 actions after loading the video.
 
-**Multi-source failover.** Call **Set Fallback URLs** before or after Load Video
-with a comma- or newline-separated list of backup source URLs. The player tries
-them in order if the primary URL is unreachable.
-
 Example event:
 
 ```
 Event: On start of layout
-Action: GCoreVideoPlugin → Load Video("https://player.gvideo.co/videos/421804_abc123", false)
-Action: GCoreVideoPlugin → Set Fallback URLs("https://backup.example.com/stream.m3u8")
+Action: YouTubeVideoPlugin → Load Video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 ```
 
 ### Awaiting load completion
