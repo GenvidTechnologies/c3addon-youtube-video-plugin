@@ -36,6 +36,23 @@ There is no automated test suite.
 - See [`docs/architecture.md`](docs/architecture.md) and
   [`docs/youtube-player-api.md`](docs/youtube-player-api.md).
 
+## Editing the addon-definition files (UTF-8 BOM)
+
+The three files the Construct 3 SDK reads at addon-load time — `src/addon.json`,
+`src/aces.json`, and `src/lang/en-US.json` — are UTF-8 **with a BOM**. This is an
+SDK convention, not an accident: it's present on exactly those three manifest
+files and on nothing else (`src/tsconfig.json`, `package.json`, and every
+`sample/**` C3-project file are BOM-less). **Preserve the BOM** — never strip it
+and don't add a no-BOM `.gitattributes` rule for these files, or the C3 editor may
+reject the manifest.
+
+Practical gotcha when editing them: a multi-line `Edit` (string replacement) can
+fail to match against the BOM'd files (single-line matches still work). The
+fallback is to `Write` the whole file — but a plain `Write` drops the BOM, so
+**restore it afterward** so the diff stays minimal. This bites any ACE add/remove
+(most remaining port work touches `aces.json` + `en-US.json` in lockstep) and any
+`addon.json` version bump at release time.
+
 ## Debugging the player
 
 This plugin wraps the [YouTube IFrame Player API](https://developers.google.com/youtube/iframe_api_reference)
