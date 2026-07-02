@@ -125,9 +125,19 @@ These map to the development-task issues:
   `dur=0` and are filtered. Empirically pinned via
   [`test/probe-load-timing.html`](../test/probe-load-timing.html); see
   [decisions/0005-awaitable-load-video.md](decisions/0005-awaitable-load-video.md).
-- **URL → video id.** `extractVideoId()` handles `watch?v=`, `youtu.be/`,
-  `/embed/`, `/shorts/`, `/v/`, and bare ids. Confirm the set of inputs Construct
-  authors will actually paste.
+- **URL → video id.** `extractVideoId()`'s guaranteed input set: bare 11-char id
+  (`^[A-Za-z0-9_-]{11}$`), `watch?v=`, `youtu.be/`, `/embed/`, `/shorts/`, `/v/`,
+  and `/live/` (YouTube live-stream watch URLs). The patterns match path/query
+  substrings rather than hostname, so `youtube-nocookie.com`, `m.youtube.com`,
+  and `music.youtube.com` are supported. `list=`, `t=`, `si=`, and `index=` are
+  recognized but ignored for id extraction — a `watch?v=ID&list=PL…` URL loads
+  only the single video `ID`. Known non-match: `attribution_link` URLs with a
+  URL-encoded `v=` nested in a `u=` parameter are not decoded or matched.
+  Playlists are parse-only — `list=` is recognized but playlist loading and
+  navigation (`nextVideo`/`previousVideo`/`playVideoAt`) are deferred to
+  [issue #12](https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin/issues/12);
+  a playlist-only URL (no `v=`) has no extractable id and stays "offline". See
+  [ADR-0006](decisions/0006-video-url-parsing-scope.md).
 - **Quality.** The numeric ABR quality ACEs were retired in issue #5 — see [ADR-0004](decisions/0004-retire-pre-release-quality-aces.md). YouTube quality is advisory/deprecated; no replacement surface is planned. Confirmed via the harness quality probe (#10): `getAvailableQualityLevels()` returns e.g. `hd720/large/medium/small/tiny/auto` and `getPlaybackQuality()` reports the active level, but selection stays advisory — YouTube overrides it.
 - **Captions.** YouTube captions are controlled via `playerVars.cc_load_policy`
   and the (unofficial) caption module, not the in-manifest/side-loaded track
