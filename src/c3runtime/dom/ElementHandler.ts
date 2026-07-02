@@ -126,7 +126,7 @@
     if (/^[A-Za-z0-9_-]{11}$/.test(trimmed)) {
       return trimmed;
     }
-    // youtu.be/<id>, youtube.com/watch?v=<id>, /embed/<id>, /shorts/<id>, /v/<id>
+    // youtu.be/<id>, youtube.com/watch?v=<id>, /embed/<id>, /shorts/<id>, /live/<id>, /v/<id>
     const patterns = [
       /[?&]v=([A-Za-z0-9_-]{11})/,
       /youtu\.be\/([A-Za-z0-9_-]{11})/,
