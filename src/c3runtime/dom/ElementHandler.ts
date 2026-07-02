@@ -294,14 +294,30 @@
       this.currentUrl = url;
       const videoId = extractVideoId(url);
       this.currentVideoId = videoId;
+      // A list= param is recognized but not acted on: playlist loading and
+      // navigation are deferred to issue #12. A watch URL with list= still
+      // loads only its single video; a playlist-only URL has no id and stays
+      // offline.
+      const hasPlaylistParam = /[?&]list=/.test(url);
 
       if (videoId === "") {
-        console.debug("[video player] No YouTube video id in URL; going offline");
+        if (hasPlaylistParam) {
+          console.debug(
+            "[video player] Playlist-only URL with no video id; staying offline (see #12)"
+          );
+        } else {
+          console.debug("[video player] No YouTube video id in URL; going offline");
+        }
         this.DestroyPlayer();
         this.PostStateToRuntime({ playerState: "offline" });
         return false;
       }
 
+      if (hasPlaylistParam) {
+        console.debug(
+          "[video player] Playlist param ignored; loading single video only (see #12)"
+        );
+      }
       console.debug("[video player] Loading YouTube video", videoId);
       this.PostStateToRuntime({ playerState: "loading" });
       this.CreatePlayer(videoId);
