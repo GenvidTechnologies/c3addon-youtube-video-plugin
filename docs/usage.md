@@ -1,10 +1,10 @@
 # YouTube Video Plugin — Usage Guide
 
-> **⚠️ Partially out of date — being rewritten for YouTube.** Section 1
-> (Loading a video) below is current for the YouTube IFrame Player API. The
-> rest of this guide (subtitles, low latency, DVR, and the other ACEs) still
-> documents the GCore-era surface and does not yet apply to this fork; the
-> YouTube rewrite of those sections is tracked in
+> **⚠️ Partially out of date — being rewritten for YouTube.** Sections 1
+> (Loading a video) and 3 (Subtitles) below are current for the YouTube IFrame
+> Player API. The rest of this guide (low latency, DVR, and the other ACEs)
+> still documents the GCore-era surface and does not yet apply to this fork;
+> the YouTube rewrite of those sections is tracked in
 > [issue #11](https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin/issues/11).
 
 **Audience:** Construct 3 game developers using the plugin's ACEs
@@ -54,9 +54,8 @@ contract.
 the URL text — there is no manifest-resolution step. Ignored params never
 affect which video loads, and the result is always exactly one video id.
 
-**Loading resets subtitle state.** Every call to Load Video clears the active
-subtitle selection and any side-loaded subtitle sources. Always call subtitle
-actions after loading the video.
+**Loading resets subtitle state.** Every call to Load Video clears the current
+subtitle selection. Always call subtitle actions after loading the video.
 
 Example event:
 
@@ -113,96 +112,46 @@ You can read the current flag value with the **NoLowLatency** expression
 
 ## 3. Subtitles
 
-The plugin supports two kinds of subtitle tracks:
+YouTube captions are controlled at the build-time level only: the plugin sets
+YouTube's `cc_load_policy` (on/off) and `cc_lang_pref` (preferred language)
+player options, both applied when the video is next loaded, not live on the
+currently-playing video. See
+[ADR-0007](decisions/0007-captions-map-retire-subtitle-aces.md) for the full
+decision.
 
-- **In-manifest tracks** — subtitle renditions embedded in the HLS manifest
-  (`#EXT-X-MEDIA:TYPE=SUBTITLES`). These are provided by GCore and are
-  available automatically for streams that include them.
-- **Side-loaded tracks** — external `.vtt` files or project files added by
-  your event sheet.
+### Setting the preferred caption language
 
-### 3a. Selecting an in-manifest track
-
-Use **Set Subtitles** with a BCP-47 language code (e.g. `"en"`, `"fr"`, `"ja"`)
-to enable an in-manifest track, or `"off"` to disable subtitles.
+Use the **Subtitles** property (in the editor) or the **Set Subtitles** action
+(at runtime) with a BCP-47 language code (e.g. `"en"`, `"fr"`, `"ja"`), or
+`"off"` to disable captions:
 
 ```
-Action: GCoreVideoPlugin → Set Subtitles("en")
-Action: GCoreVideoPlugin → Set Subtitles("off")
+Action: YouTubeVideoPlugin → Set Subtitles("en")
+Action: YouTubeVideoPlugin → Set Subtitles("off")
 ```
 
-The plugin matches by language code first, then by track name. Non-Latin names
-(Japanese, Chinese) are matched by language code.
-
-### 3b. Side-loading a subtitle file by URL
-
-Use **Add Subtitle Source** after Load Video to inject an external track:
-
-| Parameter | Description |
-|---|---|
-| URL | URL of the `.vtt` subtitle file |
-| Language | BCP-47 language code — use a tag distinct from any in-manifest track (e.g. `"en-ext"`) |
-| Label | Human-readable name shown in UI (e.g. `"English (External)"`) |
-
-Then select it with **Set Subtitles** using the same language tag:
+**Applies at next load, not live.** Setting the property or calling the
+action changes what will apply the *next* time a video loads (the player is
+rebuilt) — it does not switch captions on the video currently playing. Call
+**Set Subtitles** before or immediately after **Load Video**:
 
 ```
 Event: On start of layout
-Action: Load Video("https://player.gvideo.co/videos/421804_abc123", false)
-Action: Add Subtitle Source("https://cdn.example.com/subs/en.vtt", "en-ext", "English")
-Action: Set Subtitles("en-ext")
+Action: YouTubeVideoPlugin → Set Subtitles("en")
+Action: YouTubeVideoPlugin → Load Video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 ```
 
-**Why a distinct language tag?** In-manifest tracks and side-loaded tracks are
-selected by different internal mechanisms. If you use `"en"` for a side-loaded
-track and the manifest also has an `"en"` rendition, the in-manifest track
-shadows the external one. A tag like `"en-ext"` is unambiguous.
+### Reading the current setting
 
-### 3c. Side-loading from a Construct project file
-
-Use **Add Project Subtitle Source** with a project file asset instead of a URL.
-Parameters and ordering rules are identical to Add Subtitle Source. The action
-is async — Construct resolves the file to a URL at runtime.
-
-```
-Action: Add Project Subtitle Source(subtitles_en.vtt, "en-ext", "English")
-Action: Set Subtitles("en-ext")
-```
-
-### 3d. Building a subtitle menu
-
-Use the **On subtitles available** trigger — fires when the track list is first
-known or changes — to populate a dynamic subtitle menu.
-
-Expressions and conditions for querying the track list:
-
-| ACE | Description |
-|---|---|
-| `GetSubtitleCount` | Total number of available tracks (side-loaded + in-manifest) |
-| `GetSubtitleLanguageAt(index)` | Language code of the track at this index |
-| `GetSubtitleLabelAt(index)` | Display label of the track at this index |
-| **Has subtitles** condition | True if any tracks are available |
-| **Has subtitle language** condition | True if a track with the given language code exists |
-| **Has subtitle label** condition | True if a track with the given label exists |
-
-Side-loaded tracks are listed before in-manifest tracks in the index order, so
-their positions are stable even before the manifest finishes loading.
-
-**Subtitle menu pattern:**
-
-```
-Trigger: GCoreVideoPlugin → On subtitles available
-  (clear existing menu items)
-  Repeat GCoreVideoPlugin.GetSubtitleCount times
-    Action: Add menu item with text GCoreVideoPlugin.GetSubtitleLabelAt(loopindex)
-            and tag GCoreVideoPlugin.GetSubtitleLanguageAt(loopindex)
-
-Event: Player clicks menu item
-  Action: GCoreVideoPlugin → Set Subtitles(clickedItem.tag)
-```
-
-The **Subtitles** expression returns the currently active language tag
+The **Subtitles** expression returns the currently configured language tag
 (`"off"` when disabled).
+
+### Not yet supported
+
+Live caption language switching on an already-playing video, side-loaded
+subtitle tracks, and enumerating available caption tracks are not supported —
+YouTube has no `playerVars`-level equivalent for them, and the surface is
+deferred to a future issue (see ADR-0007).
 
 ---
 

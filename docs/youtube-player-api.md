@@ -87,8 +87,8 @@ These map to the development-task issues:
   plugin's `playerState`; `onReady` posts `duration` / `currentVolume` (and
   `audioState`) so the runtime reaches its "ready" state; `currentPlaybackTime` is
   polled while playing (YouTube has no `timeupdate` event). `onError` maps the YT
-  error codes to readable messages. Still open: captions/subtitle
-  fields (see the bullets below and their issues).
+  error codes to readable messages. The build-time caption case is resolved (#6,
+  see the Captions bullet below); still open: live caption switching.
 - **Audio lifecycle.** *Done (#4).* `lastVolume`/`lastMuted` (the user's intent via
   the ACEs) are restored on `onReady` and re-applied on each `loadVideoById` (which
   does not re-fire `onReady`); the autoplay forced-mute is reconciled by unmuting on
@@ -139,14 +139,22 @@ These map to the development-task issues:
   a playlist-only URL (no `v=`) has no extractable id and stays "offline". See
   [ADR-0006](decisions/0006-video-url-parsing-scope.md).
 - **Quality.** The numeric ABR quality ACEs were retired in issue #5 — see [ADR-0004](decisions/0004-retire-pre-release-quality-aces.md). YouTube quality is advisory/deprecated; no replacement surface is planned. Confirmed via the harness quality probe (#10): `getAvailableQualityLevels()` returns e.g. `hd720/large/medium/small/tiny/auto` and `getPlaybackQuality()` reports the active level, but selection stays advisory — YouTube overrides it.
-- **Captions.** YouTube captions are controlled via `playerVars.cc_load_policy`
-  and the (unofficial) caption module, not the in-manifest/side-loaded track
-  model the GCore ACEs use. The harness captions probe (#10) confirms the module is
+- **Captions.** *Done (#6).* The `video-subtitles` property / `SetSubtitles`
+  action now drive both `playerVars.cc_load_policy` (on/off) and
+  `playerVars.cc_lang_pref` (preferred language), applied at player
+  construction / next `Load Video` — YouTube has no live setter for either.
+  The 9 GCore-era side-loaded/enumeration ACEs (`AddSubtitleSource` and
+  friends) were retired, since arbitrary side-loaded tracks are not supported
+  by YouTube and their enumeration had no equivalent. See
+  [decisions/0007-captions-map-retire-subtitle-aces.md](decisions/0007-captions-map-retire-subtitle-aces.md).
+  The harness captions probe (#10) confirms an (unofficial) module is
   reachable on a playing captioned video: `getOption('captions', 'tracklist')`
   returns the available tracks (e.g. `[{languageCode:'en', …}]`) and
   `getOption('captions', 'translationLanguages')` returns YouTube's ~195 auto-translate
-  languages; `setOption('captions', 'track', {languageCode})` selects one. This is the
-  surface issue #6 should build on.
+  languages; `setOption('captions', 'track', {languageCode})` selects one. This
+  module is undocumented and not part of YouTube's stable API, so live caption
+  switching and track enumeration built on it are deferred to a future issue
+  rather than adopted now (ADR-0007).
 - **GCore-only ACEs.** `SetNoLowLatency`, `SetEnableDVR`, `SetFallbackURLs`, and
   the manifest-resolution machinery have no YouTube equivalent and are slated for
   removal/remap (see issues).
