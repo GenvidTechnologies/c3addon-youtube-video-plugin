@@ -12,7 +12,7 @@ written so the plugin's skills can discover them.
 
 ## Process
 
-- [issue-triage.md](issue-triage.md) — issue-triage conventions (flat-label variant) consumed by `/genvid-dev:triage-issues`: category labels, required fields, splitting/duplicates/dependencies policy, and the `gh` mutation recipes.
+- [issue-triage.md](issue-triage.md) — issue-triage conventions (flat-label variant) consumed by `/gvt-dev:triage-issues`: category labels, required fields, splitting/duplicates/dependencies policy, and the `gh` mutation recipes.
 
 ## Decision Records
 

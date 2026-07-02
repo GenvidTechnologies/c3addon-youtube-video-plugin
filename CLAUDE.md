@@ -117,7 +117,7 @@ This repo is a **fork** of `c3addon-gcore-video-plugin`, so it has two remotes:
 
 With two remotes, **unscoped `gh` commands can resolve to `upstream`** — e.g.
 `gh issue list` / `gh repo view` may target the GCore repo, and the unscoped
-`bugTracker` queries in `.genvid-agent.json` inherit the same default. A default
+`bugTracker` queries in `.gvt-agent.json` inherit the same default. A default
 is set (`gh repo set-default GenvidTechnologies/c3addon-youtube-video-plugin`); if a
 `gh` call ever hits the wrong repo, re-run that, or pass
 `-R GenvidTechnologies/c3addon-youtube-video-plugin` explicitly. Pull GCore changes
