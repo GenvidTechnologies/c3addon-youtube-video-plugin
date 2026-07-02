@@ -1,8 +1,8 @@
 # Issue Triage Conventions
 
-> Project conventions consumed by `/genvid-dev:triage-issues`. The companion
+> Project conventions consumed by `/gvt-dev:triage-issues`. The companion
 > **access mechanics** (fetch queries, label names) live in the `bugTracker` block
-> of `.genvid-agent.json`.
+> of `.gvt-agent.json`.
 >
 > This is the **flat-label variant** — this repo uses GitHub's default
 > category-label set (`bug`, `enhancement`, `documentation`, `duplicate`,
