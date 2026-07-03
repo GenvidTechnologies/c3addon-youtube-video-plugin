@@ -598,7 +598,14 @@
           if (this.loadGen !== myGen) {
             return; // superseded
           }
-          const duration = this.player?.getDuration() ?? 0;
+          // YT attaches API methods (getDuration, ...) only after the player's
+          // onReady fires — before that `new YT.Player()` returns a shell where
+          // `getDuration` is not yet a function (`?.` guards null, not a missing
+          // method). Treat "not ready yet" as duration 0 so the poll keeps going
+          // (and naturally trips `sawReset`) instead of throwing every tick.
+          const player = this.player;
+          const duration =
+            typeof player?.getDuration === "function" ? player.getDuration() : 0;
           if (!sawReset) {
             if (duration === 0) {
               sawReset = true;
