@@ -36,20 +36,16 @@ const PLUGIN_CLASS =
       this._info.AddCommonAppearanceACEs();
       this._info.AddCommonZOrderACEs();
 
-      // The YouTube IFrame Player API is a classic (non-module) script that
-      // exposes a global `YT` namespace and invokes window.onYouTubeIframeAPIReady
-      // once it is ready. Declaring it here emits a plain `<script src=...>` on
-      // export (loaded before the runtime) and puts the URL on Construct's
-      // CSP/allow-list. NOTE: in *preview* Construct adds `crossorigin` to this
-      // tag (to track load success), which makes it a CORS request; youtube.com/
-      // iframe_api sends no Access-Control-Allow-Origin, so the preview load
-      // fails ("blocked by CORS policy"). That is harmless because
-      // ElementHandler.loadYouTubeAPI() injects a clean classic <script> DOM-side
-      // as a fallback (not CORS-gated) — see the guard there, which must ignore
-      // this failed tag.
-      this._info.AddRemoteScriptDependency(
-        "https://www.youtube.com/iframe_api"
-      );
+      // The YouTube IFrame Player API is loaded DOM-side by
+      // ElementHandler.loadYouTubeAPI(), which injects a classic <script> for
+      // https://www.youtube.com/iframe_api (it installs a global `YT` and calls
+      // window.onYouTubeIframeAPIReady). We deliberately do NOT declare it via
+      // AddRemoteScriptDependency: in *preview* Construct fetches that dependency
+      // with `crossorigin`, and youtube.com/iframe_api sends no
+      // Access-Control-Allow-Origin header, so the CORS load fails AND aborts
+      // runtime startup before the DOM fallback can run (the project never
+      // loads in local preview). A plain DOM <script> is not CORS-gated and
+      // loads in preview, remote preview, and export alike.
 
       this._info.SetC3RuntimeScripts(
         [
