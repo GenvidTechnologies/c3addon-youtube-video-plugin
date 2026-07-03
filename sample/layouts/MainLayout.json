@@ -11,9 +11,9 @@
 					"properties": {
 						"video-url": "",
 						"video-subtitles": "off",
-						"no-low-latency": false,
 						"enable-chrome": true,
-						"enable-dvr": true
+						"loop": false,
+						"start": 0
 					},
 					"uid": 486,
 					"sid": 628085384369627,
