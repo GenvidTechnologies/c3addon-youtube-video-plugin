@@ -1,7 +1,7 @@
 {
 	"projectFormatVersion": 1,
 	"savedWithRelease": 47604,
-	"name": "Genvid GCore Video Plugin Sample",
+	"name": "Genvid YouTube Video Plugin Sample",
 	"runtime": "c3",
 	"useWorker": "worker",
 	"bundleAddons": false,
@@ -15,9 +15,9 @@
 		},
 		{
 			"type": "plugin",
-			"id": "Genvidtech_GCoreVideoPlugin",
-			"name": "GCore Video Plugin",
-			"author": "Genvid Technologies LLC",
+			"id": "Genvidtech_YouTubeVideoPlugin",
+			"name": "Genvid YouTube Video",
+			"author": "Genvid Technologies, LLC",
 			"bundled": false,
 			"version": "2.0.0.0",
 			"sdkVersion": 2
@@ -216,13 +216,13 @@
 		"subfolders": []
 	},
 	"properties": {
-		"description": "GCore Video Plugin Sample integration",
+		"description": "YouTube Video Plugin Sample integration",
 		"version": "2.0.0.0",
 		"autoIncrementVersion": false,
 		"author": "Genvid Technologies, LLC",
 		"authorEmail": "support@genvidtech.com",
-		"authorWebsite": "https://github.com/GenvidTechnologies/c3addon-gcore-video-plugin",
-		"appId": "com.genvid.gcoresample",
+		"authorWebsite": "https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin",
+		"appId": "com.genvid.youtubesample",
 		"pixelRounding": false,
 		"zAxisScale": "normalized",
 		"fov": 0.7853981633974483,
