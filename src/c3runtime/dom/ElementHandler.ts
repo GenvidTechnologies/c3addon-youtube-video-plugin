@@ -44,6 +44,7 @@
     setSize(width: number, height: number): void;
     loadVideoById(videoId: string): void;
     isMuted(): boolean;
+    getIframe(): HTMLIFrameElement;
     destroy(): void;
   }
 
@@ -366,9 +367,20 @@
         return;
       }
 
-      // Build the YT.Player on the Construct-managed container <div>. The API
-      // replaces the element with an <iframe>.
-      this.player = new YT.Player(this.element, {
+      // Build the YT.Player on a CHILD element INSIDE the Construct-managed
+      // container <div>, not on the container itself. The IFrame API *replaces*
+      // the element it is given with its <iframe>; if that were this.element,
+      // Construct would keep positioning/showing the now-detached original div
+      // while the real iframe floated free — so set-visible and the layout
+      // geometry never reached the player (it "stayed invisible"). Replacing a
+      // child instead keeps the iframe inside the container Construct manages.
+      const inner = document.createElement("div");
+      inner.style.width = "100%";
+      inner.style.height = "100%";
+      this.element.appendChild(inner);
+      this.player = new YT.Player(inner, {
+        width: "100%",
+        height: "100%",
         videoId,
         playerVars: this.buildPlayerVars(videoId),
         events: {
@@ -379,6 +391,18 @@
           onReady: (ev: YTPlayerEvent) => {
             console.log("[video player] YouTube player ready");
             const player = ev.target;
+            // Make the replacement <iframe> fill the container so it tracks the
+            // object's position/size/visibility (the container has
+            // pointer-events:none for game input; re-enable them on the iframe
+            // so YouTube's own chrome stays usable).
+            const iframe = player.getIframe();
+            if (iframe) {
+              iframe.style.width = "100%";
+              iframe.style.height = "100%";
+              iframe.style.border = "none";
+              iframe.style.display = "block";
+              iframe.style.pointerEvents = "auto";
+            }
             this.RestoreAudioState();
             this.PostStateToRuntime({ duration: player.getDuration() });
             this.PostAudioState();
