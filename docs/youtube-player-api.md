@@ -27,6 +27,27 @@ resolves a single shared promise off that hook (chaining any pre-existing
 handler), and also injects the script itself as a fallback so the handler works
 standalone (e.g. in [`test/player-test.html`](../test/player-test.html)).
 
+### Preview vs. export, and the CORS gotcha
+
+On **export**, `AddRemoteScriptDependency` emits a plain `<script src=...>`
+(no `crossorigin`) loaded before the runtime — a classic script, not CORS-gated,
+so it loads fine. In **preview** (`preview.construct.net`), Construct adds
+`crossorigin` to that tag so its promise-based loader can track load success —
+which turns it into a CORS request. `youtube.com/iframe_api` sends **no**
+`Access-Control-Allow-Origin` header, so the preview load fails with
+*"blocked by CORS policy"* (surfaced as an `Uncaught (in promise)` from
+`previewWindow.js`).
+
+This is why the DOM-side fallback matters and why its guard keys off an **own
+marker** (`data-yt-iframe-api`), not the script `src`: the *failed* preview
+dependency tag stays in the DOM with the same `src`, so a src-based
+"already injected?" check would skip the working load and hang. The fallback
+injects a clean classic `<script>` (no `crossorigin`), which loads in both
+preview and export; on export the declared tag usually resolves `YT` first, so
+the fallback no-ops. The preview CORS console error is benign — the fallback
+still loads the API and the player works. (Empirically verify in a real preview;
+`test/player-test.html` uses the classic path and never exercises this.)
+
 ## Building a player
 
 `new YT.Player(container, options)` **replaces** the container element with a

@@ -38,9 +38,15 @@ const PLUGIN_CLASS =
 
       // The YouTube IFrame Player API is a classic (non-module) script that
       // exposes a global `YT` namespace and invokes window.onYouTubeIframeAPIReady
-      // once it is ready. ElementHandler.ts waits on that hook before
-      // constructing players. Declaring the dependency here also puts the URL on
-      // Construct's CSP/allow-list for exported games.
+      // once it is ready. Declaring it here emits a plain `<script src=...>` on
+      // export (loaded before the runtime) and puts the URL on Construct's
+      // CSP/allow-list. NOTE: in *preview* Construct adds `crossorigin` to this
+      // tag (to track load success), which makes it a CORS request; youtube.com/
+      // iframe_api sends no Access-Control-Allow-Origin, so the preview load
+      // fails ("blocked by CORS policy"). That is harmless because
+      // ElementHandler.loadYouTubeAPI() injects a clean classic <script> DOM-side
+      // as a fallback (not CORS-gated) — see the guard there, which must ignore
+      // this failed tag.
       this._info.AddRemoteScriptDependency(
         "https://www.youtube.com/iframe_api"
       );

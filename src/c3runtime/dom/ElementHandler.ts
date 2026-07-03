@@ -97,16 +97,26 @@
             resolve(w.YT);
           }
         };
-        // Fallback: ensure the iframe_api script is present. In a Construct
-        // export, plugin.ts declares it as a remote dependency, but inject it
-        // here too so the handler also works standalone (e.g. in
-        // test/player-test.html).
-        const alreadyInjected = Array.from(
-          document.getElementsByTagName("script")
-        ).some((s) => s.src === YOUTUBE_IFRAME_API_URL);
+        // Fallback: inject a clean *classic* <script> DOM-side so the API loads
+        // even when the remote dependency declared in plugin.ts didn't. In
+        // Construct *preview* that declared tag is fetched with `crossorigin`
+        // and fails CORS (youtube.com/iframe_api sends no ACAO header), yet the
+        // failed <script> stays in the DOM with this same `src`. So we must NOT
+        // key "already injected" off its src — that would make us skip the
+        // working load and hang. Key off our OWN marker instead; a classic tag
+        // (no crossorigin) is not CORS-gated and loads in preview and export
+        // alike. (On export the declared tag loads before the runtime, so the
+        // `w.YT` check above usually resolves first and we never inject here.)
+        const IFRAME_API_MARKER = "data-yt-iframe-api";
+        const alreadyInjected =
+          document.querySelector(`script[${IFRAME_API_MARKER}]`) !== null;
         if (!alreadyInjected) {
           const tag = document.createElement("script");
           tag.src = YOUTUBE_IFRAME_API_URL;
+          tag.setAttribute(IFRAME_API_MARKER, "");
+          tag.addEventListener("error", () => {
+            console.error(`[YouTubeVideo] failed to load ${YOUTUBE_IFRAME_API_URL}`);
+          });
           document.head.appendChild(tag);
         }
       });
