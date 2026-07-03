@@ -14,48 +14,51 @@ file depends on.
 ## Loading the API
 
 The IFrame API is a **classic (non-module) script** loaded from
-`https://www.youtube.com/iframe_api`. `plugin.ts` declares it as a remote script
-dependency (which also puts it on Construct's CSP allow-list for exported games):
+`https://www.youtube.com/iframe_api`. It is injected **DOM-side** by
+`ElementHandler.loadYouTubeAPI()` (a plain `<script>` on the main thread, the
+same technique as Construct's own official YouTube sample):
 
 ```ts
-this._info.AddRemoteScriptDependency("https://www.youtube.com/iframe_api");
+const tag = document.createElement("script");
+tag.src = "https://www.youtube.com/iframe_api";
+document.head.appendChild(tag);
 ```
 
 The script loads `www-widgetapi.js`, installs a global `YT` namespace, and then
 calls `window.onYouTubeIframeAPIReady()`. `ElementHandler.loadYouTubeAPI()`
 resolves a single shared promise off that hook (chaining any pre-existing
-handler), and also injects the script itself as a fallback so the handler works
-standalone (e.g. in [`test/player-test.html`](../test/player-test.html)).
+handler); the injection is guarded by an **own marker** (`data-yt-iframe-api`)
+so it loads exactly once, and standalone too (e.g. in
+[`test/player-test.html`](../test/player-test.html)).
 
-### Preview vs. export, and the CORS gotcha
+### Why NOT `AddRemoteScriptDependency` (the CORS gotcha)
 
-On **export**, `AddRemoteScriptDependency` emits a plain `<script src=...>`
-(no `crossorigin`) loaded before the runtime — a classic script, not CORS-gated,
-so it loads fine. In **preview** (`preview.construct.net`), Construct adds
-`crossorigin` to that tag so its promise-based loader can track load success —
-which turns it into a CORS request. `youtube.com/iframe_api` sends **no**
-`Access-Control-Allow-Origin` header, so the preview load fails with
-*"blocked by CORS policy"* (surfaced as an `Uncaught (in promise)` from
-`previewWindow.js`).
+`plugin.ts` deliberately does **not** declare the API via
+`AddRemoteScriptDependency`. That call emits a clean classic `<script>` on
+**export**, but in **preview** (`preview.construct.net`) Construct adds
+`crossorigin` to the tag (to track load success), which turns it into a CORS
+request. `youtube.com/iframe_api` sends **no** `Access-Control-Allow-Origin`
+header, so the load fails with *"blocked by CORS policy"* — and empirically
+(2026-07-03) Construct **awaits** that dependency, so the rejection **aborts
+runtime startup** before any runtime/DOM script runs: the project never loads in
+local preview.
 
-The DOM-side fallback keys its guard off an **own marker** (`data-yt-iframe-api`),
-not the script `src`: the *failed* preview dependency tag stays in the DOM with
-the same `src`, so a src-based "already injected?" check would skip the working
-load. The fallback injects a clean classic `<script>` (no `crossorigin`), which
-is not CORS-gated; on export the declared tag usually resolves `YT` first, so the
-fallback no-ops.
+A plain DOM `<script>` (created at runtime by `ElementHandler`) is **not**
+CORS-gated, so it loads in local preview, remote preview, and export alike. The
+trade-off is that the URL is no longer on Construct's export CSP allow-list —
+acceptable here, since the player `<iframe>` needs a `frame-src` allowance
+regardless, so that call never covered the whole story.
 
-> **Known limitation — local preview does not load.** Empirically (2026-07-03,
-> sample project), the project **fails to load in ordinary local preview**
-> (`preview.construct.net`): Construct's runtime loader *awaits* the declared
-> remote dependency and the `crossorigin` CORS rejection aborts runtime startup
-> **before** the DOM-side fallback (or any runtime script) gets to run — so the
-> fallback can't rescue local preview. Use **Remote Preview** (which serves the
-> project from a different origin and does not hit this) or an **export**, where
-> the API loads and the player works. `test/player-test.html` uses the classic
-> path directly and never exercises this. If local preview must work too, the
-> follow-up is to drop `AddRemoteScriptDependency` and load the API purely
-> DOM-side (trade-off: loses the before-runtime tag + CSP allow-list on export).
+### Keeping the player inside the Construct container
+
+`new YT.Player(el)` **replaces** `el` with its `<iframe>`. The player is built on
+a **child** element inside the Construct-managed container `<div>` (not on the
+container itself): Construct positions/sizes/shows that container, so replacing a
+child keeps the iframe inside it and the object's `set-visible` / layout geometry
+reach the player. Building on the container directly detaches it — the replaced
+iframe floats free and the player "stays invisible". The iframe is styled to fill
+the container (`100%`) and re-enables `pointer-events` (the container sets
+`pointer-events:none` for game input) so YouTube's own chrome stays usable.
 
 ## Building a player
 
