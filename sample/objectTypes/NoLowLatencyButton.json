@@ -1,9 +1,0 @@
-{
-	"name": "NoLowLatencyButton",
-	"plugin-id": "Button",
-	"sid": 492722938093957,
-	"isGlobal": false,
-	"editorNewInstanceIsReplica": true,
-	"instanceVariables": [],
-	"behaviorTypes": []
-}

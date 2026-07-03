@@ -68,14 +68,9 @@
 			"VolumeText",
 			"SubtitleButton",
 			"NoSubButton",
-			"GCoreVideoPlugin",
 			"ErrorText",
 			"SubtitlesText",
-			"URLText",
-			"NoLowLatencyButton",
-			"NoLowLatencyText",
-			"NoLowLatencyOffButton",
-			"LiveStreamButton"
+			"URLText"
 		],
 		"subfolders": []
 	},
