@@ -38,15 +38,24 @@ which turns it into a CORS request. `youtube.com/iframe_api` sends **no**
 *"blocked by CORS policy"* (surfaced as an `Uncaught (in promise)` from
 `previewWindow.js`).
 
-This is why the DOM-side fallback matters and why its guard keys off an **own
-marker** (`data-yt-iframe-api`), not the script `src`: the *failed* preview
-dependency tag stays in the DOM with the same `src`, so a src-based
-"already injected?" check would skip the working load and hang. The fallback
-injects a clean classic `<script>` (no `crossorigin`), which loads in both
-preview and export; on export the declared tag usually resolves `YT` first, so
-the fallback no-ops. The preview CORS console error is benign — the fallback
-still loads the API and the player works. (Empirically verify in a real preview;
-`test/player-test.html` uses the classic path and never exercises this.)
+The DOM-side fallback keys its guard off an **own marker** (`data-yt-iframe-api`),
+not the script `src`: the *failed* preview dependency tag stays in the DOM with
+the same `src`, so a src-based "already injected?" check would skip the working
+load. The fallback injects a clean classic `<script>` (no `crossorigin`), which
+is not CORS-gated; on export the declared tag usually resolves `YT` first, so the
+fallback no-ops.
+
+> **Known limitation — local preview does not load.** Empirically (2026-07-03,
+> sample project), the project **fails to load in ordinary local preview**
+> (`preview.construct.net`): Construct's runtime loader *awaits* the declared
+> remote dependency and the `crossorigin` CORS rejection aborts runtime startup
+> **before** the DOM-side fallback (or any runtime script) gets to run — so the
+> fallback can't rescue local preview. Use **Remote Preview** (which serves the
+> project from a different origin and does not hit this) or an **export**, where
+> the API loads and the player works. `test/player-test.html` uses the classic
+> path directly and never exercises this. If local preview must work too, the
+> follow-up is to drop `AddRemoteScriptDependency` and load the API purely
+> DOM-side (trade-off: loses the before-runtime tag + CSP allow-list on export).
 
 ## Building a player
 
