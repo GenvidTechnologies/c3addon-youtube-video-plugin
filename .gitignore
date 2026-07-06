@@ -63,3 +63,6 @@ plan.md
 
 # Playwright MCP scratch output (page snapshots / console logs)
 .playwright-mcp/
+
+# Downloaded reference project (Construct's official in-game YouTube sample)
+official-youtube-sample/
