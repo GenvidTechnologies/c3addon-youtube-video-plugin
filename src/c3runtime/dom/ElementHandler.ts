@@ -44,7 +44,6 @@
     setSize(width: number, height: number): void;
     loadVideoById(videoId: string): void;
     isMuted(): boolean;
-    getIframe(): HTMLIFrameElement;
     destroy(): void;
   }
 
@@ -367,22 +366,43 @@
         return;
       }
 
-      // Build the YT.Player on a CHILD element INSIDE the Construct-managed
-      // container <div>, not on the container itself. The IFrame API *replaces*
-      // the element it is given with its <iframe>; if that were this.element,
-      // Construct would keep positioning/showing the now-detached original div
-      // while the real iframe floated free — so set-visible and the layout
-      // geometry never reached the player (it "stayed invisible"). Replacing a
-      // child instead keeps the iframe inside the container Construct manages.
-      const inner = document.createElement("div");
-      inner.style.width = "100%";
-      inner.style.height = "100%";
-      this.element.appendChild(inner);
-      this.player = new YT.Player(inner, {
-        width: "100%",
-        height: "100%",
-        videoId,
-        playerVars: this.buildPlayerVars(videoId),
+      // Build the player on a PRE-CREATED <iframe> placed INSIDE the
+      // Construct-managed container <div>, rather than letting YT.Player replace
+      // a <div> with its own iframe. Two reasons:
+      //  1) Visibility: the iframe lives inside the container Construct
+      //     positions/sizes/shows, so set-visible and layout geometry reach the
+      //     player. (Building on this.element directly detaches it — the replaced
+      //     iframe floats free and "stays invisible".)
+      //  2) Cross-origin isolation: when the page is COOP+COEP isolated (e.g.
+      //     Construct's worker / SharedArrayBuffer preview,
+      //     `crossOriginIsolated === true`), a normal cross-origin YouTube iframe
+      //     is blocked — chrome loads but the video stays black with a spinner
+      //     because the media (googlevideo.com, no CORP header) can't load. A
+      //     `credentialless` iframe is the standard escape hatch, but the
+      //     attribute must be set BEFORE the iframe navigates, so we must create
+      //     the iframe ourselves (YT.Player's own iframe can't be marked in
+      //     time). Only mark it when actually isolated — credentialless drops
+      //     cookies, so leaving it off elsewhere keeps sign-in-gated playback
+      //     working. Verified empirically under COOP/COEP (see
+      //     docs/youtube-player-api.md).
+      const iframe = document.createElement("iframe");
+      if ((globalThis as { crossOriginIsolated?: boolean }).crossOriginIsolated) {
+        iframe.setAttribute("credentialless", "");
+      }
+      iframe.src = this.buildEmbedUrl(videoId);
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+      iframe.style.border = "none";
+      iframe.style.display = "block";
+      // The container has pointer-events:none for game input; re-enable them on
+      // the iframe so YouTube's own chrome stays usable.
+      iframe.style.pointerEvents = "auto";
+      iframe.setAttribute(
+        "allow",
+        "autoplay; encrypted-media; picture-in-picture; fullscreen"
+      );
+      this.element.appendChild(iframe);
+      this.player = new YT.Player(iframe, {
         events: {
           // TODO(youtube): translate these into PostStateToRuntime() calls so
           // the runtime ACE layer (playerState, duration, volume, captions,
@@ -391,18 +411,6 @@
           onReady: (ev: YTPlayerEvent) => {
             console.log("[video player] YouTube player ready");
             const player = ev.target;
-            // Make the replacement <iframe> fill the container so it tracks the
-            // object's position/size/visibility (the container has
-            // pointer-events:none for game input; re-enable them on the iframe
-            // so YouTube's own chrome stays usable).
-            const iframe = player.getIframe();
-            if (iframe) {
-              iframe.style.width = "100%";
-              iframe.style.height = "100%";
-              iframe.style.border = "none";
-              iframe.style.display = "block";
-              iframe.style.pointerEvents = "auto";
-            }
             this.RestoreAudioState();
             this.PostStateToRuntime({ duration: player.getDuration() });
             this.PostAudioState();
@@ -491,6 +499,20 @@
       }
       console.debug("[video player] playerVars", vars);
       return vars;
+    }
+
+    // Build the youtube.com/embed/<id> URL (with enablejsapi=1) that the
+    // pre-created <iframe> loads; YT.Player then attaches to that iframe in
+    // place. Reuses buildPlayerVars() so the URL params match the option form.
+    private buildEmbedUrl(videoId: string): string {
+      const params = new URLSearchParams({ enablejsapi: "1" });
+      const vars = this.buildPlayerVars(videoId) as Record<string, string | number>;
+      for (const [k, v] of Object.entries(vars)) {
+        params.set(k, String(v));
+      }
+      return `https://www.youtube.com/embed/${encodeURIComponent(
+        videoId
+      )}?${params.toString()}`;
     }
 
     ResizePlayer() {

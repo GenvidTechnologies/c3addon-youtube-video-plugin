@@ -49,28 +49,52 @@ trade-off is that the URL is no longer on Construct's export CSP allow-list —
 acceptable here, since the player `<iframe>` needs a `frame-src` allowance
 regardless, so that call never covered the whole story.
 
-### Keeping the player inside the Construct container
+### The player iframe: pre-created, in-container, credentialless
 
-`new YT.Player(el)` **replaces** `el` with its `<iframe>`. The player is built on
-a **child** element inside the Construct-managed container `<div>` (not on the
-container itself): Construct positions/sizes/shows that container, so replacing a
-child keeps the iframe inside it and the object's `set-visible` / layout geometry
-reach the player. Building on the container directly detaches it — the replaced
-iframe floats free and the player "stays invisible". The iframe is styled to fill
-the container (`100%`) and re-enables `pointer-events` (the container sets
-`pointer-events:none` for game input) so YouTube's own chrome stays usable.
+`ElementHandler` does **not** let `new YT.Player(div)` create the iframe (that
+replaces the `div`, detaching the element Construct manages so the player "stays
+invisible"). Instead it **pre-creates an `<iframe>`** with the `.../embed/<id>?…`
+URL (`enablejsapi=1` + the player vars), appends it **inside** the
+Construct-managed container `<div>`, then attaches `new YT.Player(iframe, …)` to
+it in place (the approach Construct's own official YouTube sample uses). Two
+problems this solves:
+
+1. **Visibility.** The iframe lives inside the container Construct
+   positions/sizes/shows, so `set-visible` and layout geometry reach the player.
+   It fills the container (`100%`) and re-enables `pointer-events` (the container
+   sets `pointer-events:none` for game input) so YouTube's chrome stays usable.
+
+2. **Cross-origin isolation (COOP+COEP) — the black-screen-with-spinner bug.**
+   When the page is cross-origin isolated (`window.crossOriginIsolated === true`)
+   — which Construct's worker / SharedArrayBuffer preview can be — a normal
+   cross-origin YouTube iframe is blocked: the player chrome and title load, but
+   the video stays **black with a spinner** because the media (served from
+   `googlevideo.com` with no `Cross-Origin-Resource-Policy` header) can't load
+   under `COEP: require-corp`. The fix is a **`credentialless`** iframe (the
+   standard escape hatch for embedding COEP-incompatible third-party content).
+   The attribute must be set **before** the iframe navigates, which is *why* the
+   iframe is pre-created rather than made by `YT.Player`. It is marked
+   credentialless **only when `crossOriginIsolated`** — credentialless iframes
+   drop cookies, so leaving it off otherwise keeps sign-in-gated playback
+   working. Verified empirically under COOP/COEP with the Playwright MCP: a plain
+   iframe never fires `onReady`; a credentialless one reaches `PLAYING` and
+   renders.
 
 ## Building a player
 
-`new YT.Player(container, options)` **replaces** the container element with a
-YouTube `<iframe>`. Construct hands us a `<div>` (see `domSide.ts`) to build on.
-Key options: `videoId`, `playerVars`, and `events` (`onReady`, `onStateChange`,
-`onError`, `onPlaybackQualityChange`).
+`ElementHandler` pre-creates an `<iframe>` (src = `buildEmbedUrl(videoId)`, i.e.
+`.../embed/<id>?enablejsapi=1&<playerVars>`), appends it inside the
+Construct-managed `<div>` (see `domSide.ts`), then calls
+`new YT.Player(iframe, { events })` to attach the API to it in place — see
+"The player iframe" above for why (visibility + COEP). Because the iframe is
+pre-created, the player vars travel in the **embed URL** rather than a
+`playerVars` option; the `events` object still carries `onReady`,
+`onStateChange`, and `onError`.
 
 ### playerVars mapping (issue #3)
 
-`buildPlayerVars(videoId)` assembles the `playerVars` object passed to `YT.Player`
-at construction. Each var, its source, and any caveats:
+`buildPlayerVars(videoId)` assembles the player-var set that `buildEmbedUrl()`
+serializes into the embed-URL query string. Each var, its source, and any caveats:
 
 | playerVar | Value | Source |
 |---|---|---|
