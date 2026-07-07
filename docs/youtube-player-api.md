@@ -133,7 +133,10 @@ for current findings.
 
 `playVideo()`, `pauseVideo()`, `seekTo(seconds, allowSeekAhead)`, `mute()`,
 `unMute()`, `isMuted()`, `setVolume(0..100)`, `getVolume()`, `getDuration()`,
-`getCurrentTime()`, `setSize(width, height)`, `loadVideoById(id)`, `destroy()`.
+`getCurrentTime()`, `setSize(width, height)`, `loadVideoById(id)`, `destroy()`,
+`setPlaybackRate(rate)`, `getPlaybackRate()`, `getAvailablePlaybackRates()`,
+`getVideoUrl()`, `getVideoLoadedFraction()`, and `getVideoData()` (**unofficial,
+undocumented** — see the Playback rate / metadata bullet below).
 
 ## Open questions / TODO
 
@@ -191,10 +194,11 @@ These map to the development-task issues:
   only the single video `ID`. Known non-match: `attribution_link` URLs with a
   URL-encoded `v=` nested in a `u=` parameter are not decoded or matched.
   Playlists are parse-only — `list=` is recognized but playlist loading and
-  navigation (`nextVideo`/`previousVideo`/`playVideoAt`) are deferred to
-  [issue #12](https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin/issues/12);
-  a playlist-only URL (no `v=`) has no extractable id and stays "offline". See
-  [ADR-0006](decisions/0006-video-url-parsing-scope.md).
+  navigation (`nextVideo`/`previousVideo`/`playVideoAt`) remain deferred to a
+  follow-up issue (issue #12 shipped only the playback-rate/metadata ACEs
+  below; playlists were split out — see [ADR-0008](decisions/0008-playback-rate-and-metadata-aces.md)'s
+  Compromise section); a playlist-only URL (no `v=`) has no extractable id and
+  stays "offline". See [ADR-0006](decisions/0006-video-url-parsing-scope.md).
 - **Quality.** The numeric ABR quality ACEs were retired in issue #5 — see [ADR-0004](decisions/0004-retire-pre-release-quality-aces.md). YouTube quality is advisory/deprecated; no replacement surface is planned. Confirmed via the harness quality probe (#10): `getAvailableQualityLevels()` returns e.g. `hd720/large/medium/small/tiny/auto` and `getPlaybackQuality()` reports the active level, but selection stays advisory — YouTube overrides it.
 - **Captions.** *Done (#6).* The `video-subtitles` property / `SetSubtitles`
   action now drive both `playerVars.cc_load_policy` (on/off) and
@@ -212,6 +216,25 @@ These map to the development-task issues:
   module is undocumented and not part of YouTube's stable API, so live caption
   switching and track enumeration built on it are deferred to a future issue
   rather than adopted now (ADR-0007).
+- **Playback rate and video metadata.** *Done (#12).* `SetPlaybackRate` is a
+  pass-through action (no client-side clamp); `GetPlaybackRate` stays
+  authoritative via `onPlaybackRateChange` plus the ready/cued/playing
+  transitions, per the ADR-0003 pattern. `GetAvailablePlaybackRate(index)` /
+  `GetAvailablePlaybackRateCount` expose the cached `getAvailablePlaybackRates()`
+  array as an indexed getter + count, since Construct expressions have no
+  array return type. `GetVideoTitle` reads the unofficial, undocumented
+  `getVideoData().title`, optional-guarded and degrading to `""`.
+  `GetPlayerUrl` exposes `getVideoUrl()` (the player's current canonical URL,
+  which can differ from the authored `URL` expression). `GetVideoLoadedFraction`
+  is served by a dedicated ~500 ms self-terminating poll, independent of the
+  PLAYING-only playback poll. Empirically confirmed (#12, `test/player-test.html`
+  + Playwright): `getVideoData()` returns `{title, video_id, author}` today;
+  requesting an out-of-set playback rate is clamped to the nearest available
+  rate rather than strictly ignored; the loaded fraction can plateau during a
+  pause rather than always climbing. See
+  [ADR-0008](decisions/0008-playback-rate-and-metadata-aces.md). Playlist load
+  and navigation were split out of issue #12 and remain deferred — see the
+  URL → video id bullet above and [ADR-0006](decisions/0006-video-url-parsing-scope.md).
 - **GCore-only ACEs.** `SetNoLowLatency`, `SetEnableDVR`, `SetFallbackURLs`, and
   the manifest-resolution machinery have no YouTube equivalent and are slated for
   removal/remap (see issues).
