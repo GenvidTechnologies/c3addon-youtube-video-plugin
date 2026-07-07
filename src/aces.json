@@ -114,6 +114,16 @@
 			{
 				"id": "resize",
 				"scriptName": "Resize"
+			},
+			{
+				"id": "set-playback-rate",
+				"scriptName": "SetPlaybackRate",
+				"params": [
+					{
+						"id": "rate",
+						"type": "number"
+					}
+				]
 			}
 		],
 		"expressions": [
@@ -160,6 +170,42 @@
 			{
 				"id": "get-enable-chrome",
 				"expressionName": "GetEnableChrome",
+				"returnType": "number"
+			},
+			{
+				"id": "get-playback-rate",
+				"expressionName": "GetPlaybackRate",
+				"returnType": "number"
+			},
+			{
+				"id": "get-available-playback-rate",
+				"expressionName": "GetAvailablePlaybackRate",
+				"returnType": "number",
+				"params": [
+					{
+						"id": "index",
+						"type": "number"
+					}
+				]
+			},
+			{
+				"id": "get-available-playback-rate-count",
+				"expressionName": "GetAvailablePlaybackRateCount",
+				"returnType": "number"
+			},
+			{
+				"id": "get-video-title",
+				"expressionName": "GetVideoTitle",
+				"returnType": "string"
+			},
+			{
+				"id": "get-player-url",
+				"expressionName": "GetPlayerUrl",
+				"returnType": "string"
+			},
+			{
+				"id": "get-video-loaded-fraction",
+				"expressionName": "GetVideoLoadedFraction",
 				"returnType": "number"
 			}
 		]
