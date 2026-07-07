@@ -371,6 +371,7 @@
         // onReady fires only once per player, so re-apply the user's audio intent here.
         this.RestoreAudioState();
         this.PostAudioState();
+        this.StartLoadedFractionPolling();
         return;
       }
 
@@ -421,7 +422,9 @@
             const player = ev.target;
             this.RestoreAudioState();
             this.PostStateToRuntime({ duration: player.getDuration() });
+            this.PostVideoMetadataState();
             this.PostAudioState();
+            this.StartLoadedFractionPolling();
           },
           onStateChange: (ev: YTPlayerEvent) => {
             const PS = YT.PlayerState;
@@ -434,6 +437,7 @@
                   this.player.unMute();
                 }
                 this.PostAudioState();
+                this.PostVideoMetadataState();
                 this.StartPlaybackPolling();
                 break;
               case PS.PAUSED:
@@ -449,8 +453,11 @@
                 this.PostStateToRuntime({ playerState: "loading" });
                 break;
               case PS.UNSTARTED:
+                this.PostStateToRuntime({ playerState: "loading" });
+                break;
               case PS.CUED:
                 this.PostStateToRuntime({ playerState: "loading" });
+                this.PostVideoMetadataState();
                 break;
             }
           },
@@ -467,6 +474,9 @@
             // settling every reuse-load error. (Poll/timeout differ — they are
             // created fresh per load, so they capture myGen.) See ADR-0005 §4.
             this._settleLoadPromise(this.loadGen);
+          },
+          onPlaybackRateChange: (ev: YTPlayerEvent) => {
+            this.PostStateToRuntime({ playbackRate: ev.target.getPlaybackRate() });
           },
         },
       });
@@ -569,8 +579,9 @@
     }
 
     // Post an unofficial/official metadata snapshot: title (unofficial getVideoData(),
-    // guarded), video URL, playback rate and its available values. Dormant — no
-    // caller yet (see issue #12).
+    // guarded), video URL, playback rate and its available values. Called from
+    // onReady, and on state transitions to PLAYING/CUED where metadata may have
+    // changed or just become available (see issue #12).
     private PostVideoMetadataState() {
       if (!this.player) return;
       let videoTitle = "";
@@ -613,7 +624,9 @@
 
     // YouTube provides no buffered-progress event, so poll getVideoLoadedFraction()
     // while a load is in flight. Self-terminates once the fraction reaches 1.0.
-    // Dormant — no caller yet (see issue #12).
+    // Started from onReady (first load) and from the player-reuse branch of
+    // CreatePlayer (loadVideoById); idempotent (null-guarded) so either caller
+    // is safe.
     StartLoadedFractionPolling() {
       if (this.loadedFractionTimer !== null) {
         return;
@@ -755,7 +768,7 @@
       }
     }
 
-    // Dormant — no caller yet (see issue #12).
+    // Called via the domSide.ts message bridge from the Set playback rate ACE.
     OnSetPlaybackRate(state: JSONObject) {
       const rate = state["requestedRate"];
       if (typeof rate === "number") {
