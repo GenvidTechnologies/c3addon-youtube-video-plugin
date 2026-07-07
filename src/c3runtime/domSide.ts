@@ -25,6 +25,8 @@
 		OnUnmute(): void;
 		OnSeek(e: JSONObject): void;
 		OnSetVolume(e: JSONObject): void;
+		// Dormant — no ACE wired up yet (see issue #12).
+		OnSetPlaybackRate(e: JSONObject): void;
 		OnResize(): void;
 		// Returns whether a rebuild load was kicked off (metadata-ready will
 		// eventually be signalled) — used by OnLoadVideo to decide whether to
@@ -54,6 +56,7 @@
 				["unmute", (elem: HTMLElement) => this._handlers.Get(elem)?.OnUnmute()],
 				["seek", (elem: HTMLElement, e: JSONObject) => this._handlers.Get(elem)?.OnSeek(e)],
 				["setVolume", (elem: HTMLElement, e: JSONObject) => this._handlers.Get(elem)?.OnSetVolume(e)],
+				["setPlaybackRate", (elem: HTMLElement, e: JSONObject) => this._handlers.Get(elem)?.OnSetPlaybackRate(e)],
 				["resize", (elem: HTMLElement) => this._handlers.Get(elem)?.OnResize()],
 			];
 			handlers.map(([e, h]) => this.AddDOMElementMessageHandler(e, (el, data) => h(el as HTMLElement, data as JSONObject)));
