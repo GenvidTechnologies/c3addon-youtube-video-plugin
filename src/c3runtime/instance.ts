@@ -27,6 +27,15 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 	_currentVolume = -1;
 	_duration = -1;
 
+	// Dormant cache fields for issue #12 (YouTube-specific ACEs) — populated by
+	// ElementHandler.PostVideoMetadataState()/StartLoadedFractionPolling() once
+	// those are wired up; no caller yet.
+	_playbackRate = 1;
+	_availablePlaybackRates: number[] = [];
+	_videoTitle = "";
+	_playerVideoUrl = "";
+	_loadedFraction = 0;
+
 	_playerState = "offline";
 	_audioState = "offline";
 
@@ -80,6 +89,12 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		this._currentPlaybackTime = 0;
 		this._currentVolume = -1;
 		this._duration = -1;
+
+		this._playbackRate = 1;
+		this._availablePlaybackRates = [];
+		this._videoTitle = "";
+		this._playerVideoUrl = "";
+		this._loadedFraction = 0;
 
 		this._playerState = "offline";
 		this._audioState = "offline";
@@ -137,6 +152,30 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 				this._duration = state.duration as number;
 			}
 
+			// Dormant fields for issue #12 — no DOM-side poster wired up yet
+			// (see ElementHandler.PostVideoMetadataState/StartLoadedFractionPolling).
+			// Use !== undefined for the same reason as above: a legit 0/"" must
+			// not be dropped.
+			if (state.playbackRate !== undefined) {
+				this._playbackRate = state.playbackRate as number;
+			}
+
+			if (state.availablePlaybackRates !== undefined) {
+				this._availablePlaybackRates = state.availablePlaybackRates as number[];
+			}
+
+			if (state.videoTitle !== undefined) {
+				this._videoTitle = state.videoTitle as string;
+			}
+
+			if (state.playerVideoUrl !== undefined) {
+				this._playerVideoUrl = state.playerVideoUrl as string;
+			}
+
+			if (state.loadedFraction !== undefined) {
+				this._loadedFraction = state.loadedFraction as number;
+			}
+
 			// Mark the video as ready (loaded and playable) once its volume and
 			// duration are known.
 			if (!this._isReady && this._currentVolume > -1 && this._duration > -1) {
@@ -172,6 +211,11 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		this._postToDOMElement("setVolume", { requestedVolume: level });
 	}
 
+	// Dormant — no ACE wired up yet (see issue #12).
+	_SetPlaybackRate(rate: number) {
+		this._postToDOMElement("setPlaybackRate", { requestedRate: rate });
+	}
+
 	_SetMuted(mute: boolean) {
 		if (mute) {
 			this._postToDOMElement("mute", null);
@@ -191,6 +235,11 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 			currentVolume: this._currentVolume,
 			duration: this._duration,
 			currentPlaybackTime: this._currentPlaybackTime,
+			playbackRate: this._playbackRate,
+			availablePlaybackRates: this._availablePlaybackRates,
+			videoTitle: this._videoTitle,
+			playerVideoUrl: this._playerVideoUrl,
+			loadedFraction: this._loadedFraction,
 		};
 	}
 
@@ -289,7 +338,15 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 					{ name: prefix + "playerState", value: this._playerState },
 					{ name: prefix + "audioState", value: this._audioState },
 					{ name: prefix + "lastErrorCategory", value: this._lastError.category as string },
-					{ name: prefix + "lastErrorMessage", value: this._lastError.message as string }
+					{ name: prefix + "lastErrorMessage", value: this._lastError.message as string },
+					// Dormant rows for issue #12 — no ACE wired up yet. Lang keys are
+					// added in a later step (F4); until then the C3 debugger panel
+					// will show these raw key paths instead of translated labels.
+					{ name: prefix + "playbackRate", value: this._playbackRate, onedit: v => this._SetPlaybackRate(v as number) },
+					{ name: prefix + "availablePlaybackRates", value: JSON.stringify(this._availablePlaybackRates) },
+					{ name: prefix + "videoTitle", value: this._videoTitle },
+					{ name: prefix + "playerVideoUrl", value: this._playerVideoUrl },
+					{ name: prefix + "loadedFraction", value: this._loadedFraction }
 				]
 			},
 		];
