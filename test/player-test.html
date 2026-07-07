@@ -183,6 +183,28 @@
     </div>
   </div>
 
+  <!-- Probe: Playback rate / video data -->
+  <div class="probe-section">
+    <h3>Playback rate / video data (issue #12)</h3>
+    <p style="margin:.25rem 0;font-size:.85rem;">
+      <code>setPlaybackRate</code>/<code>getPlaybackRate</code>/<code>getAvailablePlaybackRates</code>/
+      <code>getVideoUrl</code>/<code>getVideoLoadedFraction</code> are official API.
+      <code>getVideoData()</code> is <b>unofficial</b> (undocumented) — wrapped in
+      try/catch and its raw returned object logged as-is.
+    </p>
+    <div class="row">
+      <label>Rate: <input id="probe-rate" type="text" class="narrow" value="1.5" /></label>
+      <button id="btn-probe-rate-set">setPlaybackRate(rate)</button>
+      <button id="btn-probe-rate-get">getPlaybackRate()</button>
+      <button id="btn-probe-rate-available">getAvailablePlaybackRates()</button>
+    </div>
+    <div class="row">
+      <button id="btn-probe-video-data">getVideoData() (unofficial)</button>
+      <button id="btn-probe-video-url">getVideoUrl()</button>
+      <button id="btn-probe-loaded-fraction">getVideoLoadedFraction()</button>
+    </div>
+  </div>
+
   <script>
     "use strict";
 
@@ -646,6 +668,78 @@
         log(`Quality: after setPlaybackQuality, getPlaybackQuality()="${after}"`);
       } catch (e) {
         log(`Quality: setPlaybackQuality error — ${e.message}`);
+      }
+    };
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // Probe: Playback rate / video data (issue #12)
+    // getVideoData() is unofficial/undocumented — try/catch and log the raw object.
+    // ════════════════════════════════════════════════════════════════════════════
+    document.getElementById("btn-probe-rate-set").onclick = () => {
+      if (!activePlayer) { log("Rate: no player"); return; }
+      const rate = parseFloat(document.getElementById("probe-rate").value.trim());
+      log(`Rate: setPlaybackRate(${rate})`);
+      try {
+        activePlayer.setPlaybackRate(rate);
+        const after = safeGet(() => activePlayer.getPlaybackRate());
+        log(`Rate: after setPlaybackRate, getPlaybackRate()=${after}`);
+      } catch (e) {
+        log(`Rate: setPlaybackRate error — ${e.message}`);
+      }
+    };
+
+    document.getElementById("btn-probe-rate-get").onclick = () => {
+      if (!activePlayer) { log("Rate: no player"); return; }
+      log("Rate: getPlaybackRate()");
+      try {
+        const rate = activePlayer.getPlaybackRate();
+        log(`Rate: current rate = ${rate}`);
+      } catch (e) {
+        log(`Rate: getPlaybackRate error — ${e.message}`);
+      }
+    };
+
+    document.getElementById("btn-probe-rate-available").onclick = () => {
+      if (!activePlayer) { log("Rate: no player"); return; }
+      log("Rate: getAvailablePlaybackRates()");
+      try {
+        const rates = activePlayer.getAvailablePlaybackRates();
+        log(`Rate: available rates = ${JSON.stringify(rates)}`);
+      } catch (e) {
+        log(`Rate: getAvailablePlaybackRates error — ${e.message}`);
+      }
+    };
+
+    document.getElementById("btn-probe-video-data").onclick = () => {
+      if (!activePlayer) { log("VideoData: no player"); return; }
+      log("VideoData: getVideoData() (unofficial API)");
+      try {
+        const data = activePlayer.getVideoData();
+        log(`VideoData: raw result = ${JSON.stringify(data)}`);
+      } catch (e) {
+        log(`VideoData: getVideoData error — ${e.message} (unofficial API may be absent)`);
+      }
+    };
+
+    document.getElementById("btn-probe-video-url").onclick = () => {
+      if (!activePlayer) { log("VideoUrl: no player"); return; }
+      log("VideoUrl: getVideoUrl()");
+      try {
+        const url = activePlayer.getVideoUrl();
+        log(`VideoUrl: url = ${url}`);
+      } catch (e) {
+        log(`VideoUrl: getVideoUrl error — ${e.message}`);
+      }
+    };
+
+    document.getElementById("btn-probe-loaded-fraction").onclick = () => {
+      if (!activePlayer) { log("LoadedFraction: no player"); return; }
+      log("LoadedFraction: getVideoLoadedFraction()");
+      try {
+        const frac = activePlayer.getVideoLoadedFraction();
+        log(`LoadedFraction: fraction = ${frac}`);
+      } catch (e) {
+        log(`LoadedFraction: getVideoLoadedFraction error — ${e.message}`);
       }
     };
 
