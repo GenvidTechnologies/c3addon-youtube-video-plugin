@@ -18,6 +18,10 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Acts = {
 	SetVolume(this:SDKInstanceClass, level: number) {
 		this._SetVolume(level);
 	},
+	// Dormant — no ACE wired up yet (see issue #12).
+	SetPlaybackRate(this: SDKInstanceClass, rate: number) {
+		this._SetPlaybackRate(rate);
+	},
 	SetURL(this:SDKInstanceClass, url: string) {
 		// Async action (aces.json isAsync) — return the promise so Construct waits
 		// for the video load to settle before running the next event-sheet action
