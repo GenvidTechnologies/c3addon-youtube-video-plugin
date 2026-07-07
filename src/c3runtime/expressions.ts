@@ -31,7 +31,7 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Exps =
 	GetEnableChrome(this:SDKInstanceClass) {
 		return this._GetEnableChrome();
 	},
-	// Dormant — no ACE wired up yet (see issue #12).
+	// Playback rate and video metadata (issue #12).
 	GetPlaybackRate(this: SDKInstanceClass) {
 		return this._playbackRate;
 	},

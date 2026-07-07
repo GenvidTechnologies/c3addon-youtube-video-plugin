@@ -25,7 +25,7 @@
 		OnUnmute(): void;
 		OnSeek(e: JSONObject): void;
 		OnSetVolume(e: JSONObject): void;
-		// Dormant — no ACE wired up yet (see issue #12).
+		// Playback rate (issue #12).
 		OnSetPlaybackRate(e: JSONObject): void;
 		OnResize(): void;
 		// Returns whether a rebuild load was kicked off (metadata-ready will

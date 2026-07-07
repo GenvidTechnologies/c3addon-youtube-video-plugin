@@ -27,9 +27,8 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 	_currentVolume = -1;
 	_duration = -1;
 
-	// Dormant cache fields for issue #12 (YouTube-specific ACEs) — populated by
-	// ElementHandler.PostVideoMetadataState()/StartLoadedFractionPolling() once
-	// those are wired up; no caller yet.
+	// Cache fields for issue #12 (YouTube-specific ACEs) — pushed from
+	// ElementHandler.PostVideoMetadataState()/StartLoadedFractionPolling().
 	_playbackRate = 1;
 	_availablePlaybackRates: number[] = [];
 	_videoTitle = "";
@@ -152,10 +151,9 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 				this._duration = state.duration as number;
 			}
 
-			// Dormant fields for issue #12 — no DOM-side poster wired up yet
-			// (see ElementHandler.PostVideoMetadataState/StartLoadedFractionPolling).
-			// Use !== undefined for the same reason as above: a legit 0/"" must
-			// not be dropped.
+			// Issue #12 fields, pushed from ElementHandler.PostVideoMetadataState/
+			// StartLoadedFractionPolling. Use !== undefined for the same reason as
+			// above: a legit 0/"" must not be dropped.
 			if (state.playbackRate !== undefined) {
 				this._playbackRate = state.playbackRate as number;
 			}
@@ -211,7 +209,7 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		this._postToDOMElement("setVolume", { requestedVolume: level });
 	}
 
-	// Dormant — no ACE wired up yet (see issue #12).
+	// Backs the SetPlaybackRate action (issue #12).
 	_SetPlaybackRate(rate: number) {
 		this._postToDOMElement("setPlaybackRate", { requestedRate: rate });
 	}
@@ -339,9 +337,7 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 					{ name: prefix + "audioState", value: this._audioState },
 					{ name: prefix + "lastErrorCategory", value: this._lastError.category as string },
 					{ name: prefix + "lastErrorMessage", value: this._lastError.message as string },
-					// Dormant rows for issue #12 — no ACE wired up yet. Lang keys are
-					// added in a later step (F4); until then the C3 debugger panel
-					// will show these raw key paths instead of translated labels.
+					// Issue #12 rows: playback rate and video metadata.
 					{ name: prefix + "playbackRate", value: this._playbackRate, onedit: v => this._SetPlaybackRate(v as number) },
 					{ name: prefix + "availablePlaybackRates", value: JSON.stringify(this._availablePlaybackRates) },
 					{ name: prefix + "videoTitle", value: this._videoTitle },

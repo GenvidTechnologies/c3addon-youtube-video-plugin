@@ -18,7 +18,7 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Acts = {
 	SetVolume(this:SDKInstanceClass, level: number) {
 		this._SetVolume(level);
 	},
-	// Dormant — no ACE wired up yet (see issue #12).
+	// Playback rate (issue #12).
 	SetPlaybackRate(this: SDKInstanceClass, rate: number) {
 		this._SetPlaybackRate(rate);
 	},
