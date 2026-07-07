@@ -30,5 +30,24 @@ C3.Plugins.Genvidtech_YouTubeVideoPlugin.Exps =
 	},
 	GetEnableChrome(this:SDKInstanceClass) {
 		return this._GetEnableChrome();
+	},
+	// Dormant — no ACE wired up yet (see issue #12).
+	GetPlaybackRate(this: SDKInstanceClass) {
+		return this._playbackRate;
+	},
+	GetAvailablePlaybackRate(this: SDKInstanceClass, index: number) {
+		return this._availablePlaybackRates[index] ?? 0;
+	},
+	GetAvailablePlaybackRateCount(this: SDKInstanceClass) {
+		return this._availablePlaybackRates.length;
+	},
+	GetVideoTitle(this: SDKInstanceClass) {
+		return this._videoTitle;
+	},
+	GetPlayerUrl(this: SDKInstanceClass) {
+		return this._playerVideoUrl;
+	},
+	GetVideoLoadedFraction(this: SDKInstanceClass) {
+		return this._loadedFraction;
 	}
 };
