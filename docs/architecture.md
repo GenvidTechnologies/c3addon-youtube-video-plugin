@@ -41,9 +41,11 @@ bridge** (Construct's `DOMElementHandler` / `ISDKDOMInstanceBase`
 `postMessage`-style helpers). The runtime side posts intent messages — `play`,
 `pause`, `seek`, `setVolume`, `mute`, `unmute`, and element-state updates — and
 receives back `state-changed` and `error` messages, which it folds into plugin
-state (`playerState`, `audioState`, `currentVolume`, `duration`,
-`currentPlaybackTime`). Note `instance.ts` treats `currentVolume === 0` as
-muted.
+state. That state set grows as ACEs are added (`playerState`, `audioState`,
+`currentVolume`, `duration`, `currentPlaybackTime`, and the playback-rate /
+video-metadata fields from [ADR-0008](decisions/0008-playback-rate-and-metadata-aces.md),
+among others) — treat the list as illustrative, not exhaustive. Note `instance.ts`
+treats `currentVolume === 0` as muted.
 
 ### Bridge modes: fire-and-forget vs. async round-trip
 
@@ -83,6 +85,49 @@ details through the runtime side — keep `ElementHandler.ts` the single seam.
 
 See [`youtube-player-api.md`](youtube-player-api.md) for the player API surface
 used by `ElementHandler.ts`.
+
+## Adding an ACE (action / expression)
+
+New ACEs follow two fixed wiring chains. The fastest way to add one is to copy an
+existing ACE of the same kind end to end — `set-volume` is the canonical **action**
+template, `get-duration` the canonical **expression** template.
+
+**Action** — a one-way command to the player:
+
+1. `src/aces.json` — append an `actions` entry (`id`, `scriptName`, `params`).
+2. `src/lang/en-US.json` — append the matching `list-name` / `display-text` /
+   `description` / `params` strings.
+3. `src/c3runtime/actions.ts` — a thin dispatcher: `SetX(this, …) { this._SetX(…); }`.
+4. `src/c3runtime/instance.ts` — `_SetX(…) { this._postToDOMElement("setX", {…}); }`.
+5. `src/c3runtime/domSide.ts` — register `["setX", (elem, e) => …OnSetX(e)]` and add
+   `OnSetX` to `IElementHandler`.
+6. `src/c3runtime/dom/ElementHandler.ts` — `OnSetX(state) { …this.player?.setX(…); }`
+   — the only place the YouTube API is touched.
+
+**Expression** — a value read from the event sheet. **Expressions read a
+synchronous cached instance field; they never round-trip to the DOM.** So the value
+must be *pushed* from the seam ahead of time (the ADR-0003 pattern):
+
+1. `src/aces.json` + `src/lang/en-US.json` — append the `expressions` entry
+   (`id`, `expressionName`, `returnType`; `params` if parameterized — see
+   `get-available-playback-rate`, the surface's first parameterized expression).
+2. `src/c3runtime/expressions.ts` — `GetX(this) { return this._x; }` — returns a
+   **cached field**, nothing more.
+3. `src/c3runtime/instance.ts` — declare `_x`, default it in `_InitializeState()`
+   (so it resets on load/offline), and store it in `_OnStateChanged` with the
+   `state.x !== undefined` guard (so a legitimate `0` / `""` is not dropped).
+4. `src/c3runtime/dom/ElementHandler.ts` — **push** the value via
+   `PostStateToRuntime({ x: … })` at the right moments (on `onReady`, on the
+   relevant `onStateChange` transition, on a dedicated poll, etc.). A pull-style
+   YouTube getter (`getPlaybackRate`, `getVideoData`) must be converted to push
+   here.
+
+Two conventions apply to both: the surface is **additive-only and frozen** — append
+to the end of the `aces.json` arrays, never insert/reorder/rename (see ADR-0001/0002)
+— and `src/aces.json` + `src/lang/en-US.json` are **UTF-8 with a BOM** (a multi-line
+`Edit` can fail to match; the fallback is to `Write` the whole file and restore the
+BOM — see `CLAUDE.md`). `npm run lint` runs `validate-aces.mjs`, which fails if any
+ACE or param lacks a lang string.
 
 ## Plugin properties: the positional contract
 

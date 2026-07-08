@@ -161,6 +161,17 @@
 						"list-name": "Resize",
 						"display-text": "Resize player to container",
 						"description": "Re-sync the player dimensions to its container. The player is automatically resized via ResizeObserver; use this action when an immediate manual re-sync is needed."
+					},
+					"set-playback-rate": {
+						"list-name": "Set playback rate",
+						"display-text": "Set playback rate to [i]{0}[/i]",
+						"description": "Set the video player's playback rate.",
+						"params": {
+							"rate": {
+								"name": "Rate",
+								"desc": "The playback rate to set (e.g. 1 = normal, 2 = double speed). YouTube silently ignores a rate that isn't in the available set (see Get available playback rate)."
+							}
+						}
 					}
 				},
 				"expressions": {
@@ -199,6 +210,36 @@
 					"get-enable-chrome": {
 						"description": "Whether the YouTube player control bar (player built-in UI) is enabled.",
 						"translated-name": "GetEnableChrome"
+					},
+					"get-playback-rate": {
+						"description": "The current playback rate (e.g. 1 = normal, 2 = double speed).",
+						"translated-name": "GetPlaybackRate"
+					},
+					"get-available-playback-rate": {
+						"description": "The available playback rate at the given index (use GetAvailablePlaybackRateCount for the count). Returns 0 if out of range.",
+						"translated-name": "GetAvailablePlaybackRate",
+						"params": {
+							"index": {
+								"name": "Index",
+								"desc": "The index of the available playback rate to retrieve."
+							}
+						}
+					},
+					"get-available-playback-rate-count": {
+						"description": "The number of available playback rates for the current video.",
+						"translated-name": "GetAvailablePlaybackRateCount"
+					},
+					"get-video-title": {
+						"description": "The current video's title. Uses an unofficial YouTube API and may be empty if unavailable.",
+						"translated-name": "GetVideoTitle"
+					},
+					"get-player-url": {
+						"description": "The current video URL reported by the YouTube player, which may differ from the authored URL property (e.g. after canonicalisation or a reuse-load). See the URL expression for the authored value.",
+						"translated-name": "GetPlayerUrl"
+					},
+					"get-video-loaded-fraction": {
+						"description": "The fraction (0-1) of the video that has buffered.",
+						"translated-name": "GetVideoLoadedFraction"
 					}
 				},
 				"debugger": {
@@ -214,7 +255,12 @@
 					"playerState": "Player State",
 					"audioState": "Audio State",
 					"lastErrorCategory": "Last Error Category",
-					"lastErrorMessage": "Last Error Message"
+					"lastErrorMessage": "Last Error Message",
+					"playbackRate": "Playback rate",
+					"availablePlaybackRates": "Available playback rates",
+					"videoTitle": "Video title",
+					"playerVideoUrl": "Player URL",
+					"loadedFraction": "Loaded fraction"
 				}
 			}
 		}

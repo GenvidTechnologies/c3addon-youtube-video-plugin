@@ -45,6 +45,12 @@
     loadVideoById(videoId: string): void;
     isMuted(): boolean;
     destroy(): void;
+    setPlaybackRate(rate: number): void;
+    getPlaybackRate(): number;
+    getAvailablePlaybackRates(): number[];
+    getVideoUrl(): string;
+    getVideoLoadedFraction(): number;
+    getVideoData?(): { title?: string; video_id?: string; author?: string };
   }
 
   // The argument passed to YT.Player event callbacks (onReady, onStateChange…).
@@ -171,6 +177,7 @@
     lastVolume: number;
     resizeObserver: ResizeObserver | null;
     playbackTimer: number | null;
+    loadedFractionTimer: number | null;
     controller: AbortController;
     // Awaitable-load state. The load promise resolves once the new video's
     // metadata is loaded (getDuration() > 0) for the most-recently-requested
@@ -202,6 +209,7 @@
       this.lastVolume = -1;
       this.resizeObserver = null;
       this.playbackTimer = null;
+      this.loadedFractionTimer = null;
       this.controller = new AbortController();
       this.loadReadyResolve = null;
       this.loadGen = 0;
@@ -363,6 +371,7 @@
         // onReady fires only once per player, so re-apply the user's audio intent here.
         this.RestoreAudioState();
         this.PostAudioState();
+        this.StartLoadedFractionPolling();
         return;
       }
 
@@ -413,7 +422,9 @@
             const player = ev.target;
             this.RestoreAudioState();
             this.PostStateToRuntime({ duration: player.getDuration() });
+            this.PostVideoMetadataState();
             this.PostAudioState();
+            this.StartLoadedFractionPolling();
           },
           onStateChange: (ev: YTPlayerEvent) => {
             const PS = YT.PlayerState;
@@ -426,6 +437,7 @@
                   this.player.unMute();
                 }
                 this.PostAudioState();
+                this.PostVideoMetadataState();
                 this.StartPlaybackPolling();
                 break;
               case PS.PAUSED:
@@ -441,8 +453,11 @@
                 this.PostStateToRuntime({ playerState: "loading" });
                 break;
               case PS.UNSTARTED:
+                this.PostStateToRuntime({ playerState: "loading" });
+                break;
               case PS.CUED:
                 this.PostStateToRuntime({ playerState: "loading" });
+                this.PostVideoMetadataState();
                 break;
             }
           },
@@ -459,6 +474,9 @@
             // settling every reuse-load error. (Poll/timeout differ — they are
             // created fresh per load, so they capture myGen.) See ADR-0005 §4.
             this._settleLoadPromise(this.loadGen);
+          },
+          onPlaybackRateChange: (ev: YTPlayerEvent) => {
+            this.PostStateToRuntime({ playbackRate: ev.target.getPlaybackRate() });
           },
         },
       });
@@ -560,6 +578,26 @@
       });
     }
 
+    // Post an unofficial/official metadata snapshot: title (unofficial getVideoData(),
+    // guarded), video URL, playback rate and its available values. Called from
+    // onReady, and on state transitions to PLAYING/CUED where metadata may have
+    // changed or just become available (see issue #12).
+    private PostVideoMetadataState() {
+      if (!this.player) return;
+      let videoTitle = "";
+      try {
+        videoTitle = this.player.getVideoData?.()?.title ?? "";
+      } catch (e) {
+        console.warn("[video player] getVideoData failed (unofficial API)", e);
+      }
+      this.PostStateToRuntime({
+        videoTitle,
+        playerVideoUrl: this.player.getVideoUrl(),
+        playbackRate: this.player.getPlaybackRate(),
+        availablePlaybackRates: this.player.getAvailablePlaybackRates(),
+      });
+    }
+
     StartPlaybackPolling() {
       if (this.playbackTimer !== null) {
         return;
@@ -584,8 +622,39 @@
       }
     }
 
+    // YouTube provides no buffered-progress event, so poll getVideoLoadedFraction()
+    // while a load is in flight. Self-terminates once the fraction reaches 1.0.
+    // Started from onReady (first load) and from the player-reuse branch of
+    // CreatePlayer (loadVideoById); idempotent (null-guarded) so either caller
+    // is safe.
+    StartLoadedFractionPolling() {
+      if (this.loadedFractionTimer !== null) {
+        return;
+      }
+      this.loadedFractionTimer = globalThis.setInterval(() => {
+        let frac = 0;
+        try {
+          frac = this.player?.getVideoLoadedFraction() ?? 0;
+        } catch (e) {
+          console.warn("[video player] getVideoLoadedFraction failed", e);
+        }
+        this.PostStateToRuntime({ loadedFraction: frac });
+        if (frac >= 1.0) {
+          this.StopLoadedFractionPolling();
+        }
+      }, 500);
+    }
+
+    StopLoadedFractionPolling() {
+      if (this.loadedFractionTimer !== null) {
+        globalThis.clearInterval(this.loadedFractionTimer);
+        this.loadedFractionTimer = null;
+      }
+    }
+
     DestroyPlayer() {
       this.StopPlaybackPolling();
+      this.StopLoadedFractionPolling();
       this.resizeObserver?.disconnect();
       this.resizeObserver = null;
       if (this.player) {
@@ -696,6 +765,14 @@
         // YouTube API volume is 0..100.
         this.player?.setVolume(volume * 100);
         this.PostAudioState();
+      }
+    }
+
+    // Called via the domSide.ts message bridge from the Set playback rate ACE.
+    OnSetPlaybackRate(state: JSONObject) {
+      const rate = state["requestedRate"];
+      if (typeof rate === "number") {
+        this.player?.setPlaybackRate(rate);
       }
     }
 
