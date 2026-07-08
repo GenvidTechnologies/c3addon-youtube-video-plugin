@@ -121,6 +121,28 @@ when the Playwright MCP is unavailable.
 > Claude Code plugin — if they're absent, install/enable it via `/plugin` instead
 > of falling back to a hand-built user-run probe.
 
+## C3 domain tooling (`sample/`)
+
+The `gvt-construct3` plugin's MCP servers (`construct3-chef`, `c3-domain-manager`)
+treat **`sample/` as the C3-project root** — auto-discovered because it is the one
+repo-child holding `project.c3proj`. `sample/domain-config.json` declares the
+sample's domains for `c3-domain-manager` (verify with
+`/gvt-construct3:audit-c3-conventions`). Two gotchas that already bit once:
+
+- **Keep `sample/scripts/` present** (an empty `.gitkeep` suffices). `c3-domain-manager`'s
+  `generate` / `domain-health` / `context-map` crash on a missing `scripts/` dir even
+  though a C3 project may legitimately have none (`list-uncategorized` tolerates it).
+- **Never add a second `project.c3proj` at repo depth-1** (e.g. a downloaded reference
+  such as `official-youtube-sample/`). Discovery scans the **filesystem** and errors on
+  2+ matches, so the domain-manager server fails to start (`-32000`). **Gitignoring the
+  folder does not help** — git-ignore status is not filesystem visibility. Keep the extra
+  project out of the repo tree (or pin `--project-dir sample` via a workspace `.mcp.json`,
+  which then couples the plugin's server version pins).
+
+Regenerate the committed `sample/extracted/domain-index/` after changing the sample or
+`domain-config.json`: `c3-domain-manager generate` (auto-discovers `sample/`) or the MCP
+`regenerate` tool.
+
 ## Commit Format
 
 `<type> - <description>`, where `<type>` is one of `feat`, `fix`, or `chore`.
