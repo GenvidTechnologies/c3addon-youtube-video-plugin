@@ -97,16 +97,26 @@
             resolve(w.YT);
           }
         };
-        // Fallback: ensure the iframe_api script is present. In a Construct
-        // export, plugin.ts declares it as a remote dependency, but inject it
-        // here too so the handler also works standalone (e.g. in
-        // test/player-test.html).
-        const alreadyInjected = Array.from(
-          document.getElementsByTagName("script")
-        ).some((s) => s.src === YOUTUBE_IFRAME_API_URL);
+        // Fallback: inject a clean *classic* <script> DOM-side so the API loads
+        // even when the remote dependency declared in plugin.ts didn't. In
+        // Construct *preview* that declared tag is fetched with `crossorigin`
+        // and fails CORS (youtube.com/iframe_api sends no ACAO header), yet the
+        // failed <script> stays in the DOM with this same `src`. So we must NOT
+        // key "already injected" off its src — that would make us skip the
+        // working load and hang. Key off our OWN marker instead; a classic tag
+        // (no crossorigin) is not CORS-gated and loads in preview and export
+        // alike. (On export the declared tag loads before the runtime, so the
+        // `w.YT` check above usually resolves first and we never inject here.)
+        const IFRAME_API_MARKER = "data-yt-iframe-api";
+        const alreadyInjected =
+          document.querySelector(`script[${IFRAME_API_MARKER}]`) !== null;
         if (!alreadyInjected) {
           const tag = document.createElement("script");
           tag.src = YOUTUBE_IFRAME_API_URL;
+          tag.setAttribute(IFRAME_API_MARKER, "");
+          tag.addEventListener("error", () => {
+            console.error(`[YouTubeVideo] failed to load ${YOUTUBE_IFRAME_API_URL}`);
+          });
           document.head.appendChild(tag);
         }
       });
@@ -356,11 +366,43 @@
         return;
       }
 
-      // Build the YT.Player on the Construct-managed container <div>. The API
-      // replaces the element with an <iframe>.
-      this.player = new YT.Player(this.element, {
-        videoId,
-        playerVars: this.buildPlayerVars(videoId),
+      // Build the player on a PRE-CREATED <iframe> placed INSIDE the
+      // Construct-managed container <div>, rather than letting YT.Player replace
+      // a <div> with its own iframe. Two reasons:
+      //  1) Visibility: the iframe lives inside the container Construct
+      //     positions/sizes/shows, so set-visible and layout geometry reach the
+      //     player. (Building on this.element directly detaches it — the replaced
+      //     iframe floats free and "stays invisible".)
+      //  2) Cross-origin isolation: when the page is COOP+COEP isolated (e.g.
+      //     Construct's worker / SharedArrayBuffer preview,
+      //     `crossOriginIsolated === true`), a normal cross-origin YouTube iframe
+      //     is blocked — chrome loads but the video stays black with a spinner
+      //     because the media (googlevideo.com, no CORP header) can't load. A
+      //     `credentialless` iframe is the standard escape hatch, but the
+      //     attribute must be set BEFORE the iframe navigates, so we must create
+      //     the iframe ourselves (YT.Player's own iframe can't be marked in
+      //     time). Only mark it when actually isolated — credentialless drops
+      //     cookies, so leaving it off elsewhere keeps sign-in-gated playback
+      //     working. Verified empirically under COOP/COEP (see
+      //     docs/youtube-player-api.md).
+      const iframe = document.createElement("iframe");
+      if ((globalThis as { crossOriginIsolated?: boolean }).crossOriginIsolated) {
+        iframe.setAttribute("credentialless", "");
+      }
+      iframe.src = this.buildEmbedUrl(videoId);
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+      iframe.style.border = "none";
+      iframe.style.display = "block";
+      // The container has pointer-events:none for game input; re-enable them on
+      // the iframe so YouTube's own chrome stays usable.
+      iframe.style.pointerEvents = "auto";
+      iframe.setAttribute(
+        "allow",
+        "autoplay; encrypted-media; picture-in-picture; fullscreen"
+      );
+      this.element.appendChild(iframe);
+      this.player = new YT.Player(iframe, {
         events: {
           // TODO(youtube): translate these into PostStateToRuntime() calls so
           // the runtime ACE layer (playerState, duration, volume, captions,
@@ -457,6 +499,20 @@
       }
       console.debug("[video player] playerVars", vars);
       return vars;
+    }
+
+    // Build the youtube.com/embed/<id> URL (with enablejsapi=1) that the
+    // pre-created <iframe> loads; YT.Player then attaches to that iframe in
+    // place. Reuses buildPlayerVars() so the URL params match the option form.
+    private buildEmbedUrl(videoId: string): string {
+      const params = new URLSearchParams({ enablejsapi: "1" });
+      const vars = this.buildPlayerVars(videoId) as Record<string, string | number>;
+      for (const [k, v] of Object.entries(vars)) {
+        params.set(k, String(v));
+      }
+      return `https://www.youtube.com/embed/${encodeURIComponent(
+        videoId
+      )}?${params.toString()}`;
     }
 
     ResizePlayer() {
@@ -588,7 +644,14 @@
           if (this.loadGen !== myGen) {
             return; // superseded
           }
-          const duration = this.player?.getDuration() ?? 0;
+          // YT attaches API methods (getDuration, ...) only after the player's
+          // onReady fires — before that `new YT.Player()` returns a shell where
+          // `getDuration` is not yet a function (`?.` guards null, not a missing
+          // method). Treat "not ready yet" as duration 0 so the poll keeps going
+          // (and naturally trips `sawReset`) instead of throwing every tick.
+          const player = this.player;
+          const duration =
+            typeof player?.getDuration === "function" ? player.getDuration() : 0;
           if (!sawReset) {
             if (duration === 0) {
               sawReset = true;

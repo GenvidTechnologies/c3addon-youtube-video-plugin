@@ -44,11 +44,11 @@
 				{
 					"type": "VideoPlayer",
 					"properties": {
-						"video-url": "https://player.gvideo.co/videos/421804_JUpVsXgbH6ky2vAW",
+						"video-url": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
 						"video-subtitles": "off",
-						"no-low-latency": false,
 						"enable-chrome": false,
-						"enable-dvr": true
+						"loop": false,
+						"start": 0
 					},
 					"uid": 4,
 					"sid": 412574724367276,

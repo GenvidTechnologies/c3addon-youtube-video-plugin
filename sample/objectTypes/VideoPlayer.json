@@ -1,6 +1,6 @@
 {
 	"name": "VideoPlayer",
-	"plugin-id": "Genvidtech_GCoreVideoPlugin",
+	"plugin-id": "Genvidtech_YouTubeVideoPlugin",
 	"sid": 654619375241237,
 	"isGlobal": false,
 	"editorNewInstanceIsReplica": true,

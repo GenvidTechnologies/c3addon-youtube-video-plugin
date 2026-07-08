@@ -14,30 +14,87 @@ file depends on.
 ## Loading the API
 
 The IFrame API is a **classic (non-module) script** loaded from
-`https://www.youtube.com/iframe_api`. `plugin.ts` declares it as a remote script
-dependency (which also puts it on Construct's CSP allow-list for exported games):
+`https://www.youtube.com/iframe_api`. It is injected **DOM-side** by
+`ElementHandler.loadYouTubeAPI()` (a plain `<script>` on the main thread, the
+same technique as Construct's own official YouTube sample):
 
 ```ts
-this._info.AddRemoteScriptDependency("https://www.youtube.com/iframe_api");
+const tag = document.createElement("script");
+tag.src = "https://www.youtube.com/iframe_api";
+document.head.appendChild(tag);
 ```
 
 The script loads `www-widgetapi.js`, installs a global `YT` namespace, and then
 calls `window.onYouTubeIframeAPIReady()`. `ElementHandler.loadYouTubeAPI()`
 resolves a single shared promise off that hook (chaining any pre-existing
-handler), and also injects the script itself as a fallback so the handler works
-standalone (e.g. in [`test/player-test.html`](../test/player-test.html)).
+handler); the injection is guarded by an **own marker** (`data-yt-iframe-api`)
+so it loads exactly once, and standalone too (e.g. in
+[`test/player-test.html`](../test/player-test.html)).
+
+### Why NOT `AddRemoteScriptDependency` (the CORS gotcha)
+
+`plugin.ts` deliberately does **not** declare the API via
+`AddRemoteScriptDependency`. That call emits a clean classic `<script>` on
+**export**, but in **preview** (`preview.construct.net`) Construct adds
+`crossorigin` to the tag (to track load success), which turns it into a CORS
+request. `youtube.com/iframe_api` sends **no** `Access-Control-Allow-Origin`
+header, so the load fails with *"blocked by CORS policy"* — and empirically
+(2026-07-03) Construct **awaits** that dependency, so the rejection **aborts
+runtime startup** before any runtime/DOM script runs: the project never loads in
+local preview.
+
+A plain DOM `<script>` (created at runtime by `ElementHandler`) is **not**
+CORS-gated, so it loads in local preview, remote preview, and export alike. The
+trade-off is that the URL is no longer on Construct's export CSP allow-list —
+acceptable here, since the player `<iframe>` needs a `frame-src` allowance
+regardless, so that call never covered the whole story.
+
+### The player iframe: pre-created, in-container, credentialless
+
+`ElementHandler` does **not** let `new YT.Player(div)` create the iframe (that
+replaces the `div`, detaching the element Construct manages so the player "stays
+invisible"). Instead it **pre-creates an `<iframe>`** with the `.../embed/<id>?…`
+URL (`enablejsapi=1` + the player vars), appends it **inside** the
+Construct-managed container `<div>`, then attaches `new YT.Player(iframe, …)` to
+it in place (the approach Construct's own official YouTube sample uses). Two
+problems this solves:
+
+1. **Visibility.** The iframe lives inside the container Construct
+   positions/sizes/shows, so `set-visible` and layout geometry reach the player.
+   It fills the container (`100%`) and re-enables `pointer-events` (the container
+   sets `pointer-events:none` for game input) so YouTube's chrome stays usable.
+
+2. **Cross-origin isolation (COOP+COEP) — the black-screen-with-spinner bug.**
+   When the page is cross-origin isolated (`window.crossOriginIsolated === true`)
+   — which Construct's worker / SharedArrayBuffer preview can be — a normal
+   cross-origin YouTube iframe is blocked: the player chrome and title load, but
+   the video stays **black with a spinner** because the media (served from
+   `googlevideo.com` with no `Cross-Origin-Resource-Policy` header) can't load
+   under `COEP: require-corp`. The fix is a **`credentialless`** iframe (the
+   standard escape hatch for embedding COEP-incompatible third-party content).
+   The attribute must be set **before** the iframe navigates, which is *why* the
+   iframe is pre-created rather than made by `YT.Player`. It is marked
+   credentialless **only when `crossOriginIsolated`** — credentialless iframes
+   drop cookies, so leaving it off otherwise keeps sign-in-gated playback
+   working. Verified empirically under COOP/COEP with the Playwright MCP: a plain
+   iframe never fires `onReady`; a credentialless one reaches `PLAYING` and
+   renders.
 
 ## Building a player
 
-`new YT.Player(container, options)` **replaces** the container element with a
-YouTube `<iframe>`. Construct hands us a `<div>` (see `domSide.ts`) to build on.
-Key options: `videoId`, `playerVars`, and `events` (`onReady`, `onStateChange`,
-`onError`, `onPlaybackQualityChange`).
+`ElementHandler` pre-creates an `<iframe>` (src = `buildEmbedUrl(videoId)`, i.e.
+`.../embed/<id>?enablejsapi=1&<playerVars>`), appends it inside the
+Construct-managed `<div>` (see `domSide.ts`), then calls
+`new YT.Player(iframe, { events })` to attach the API to it in place — see
+"The player iframe" above for why (visibility + COEP). Because the iframe is
+pre-created, the player vars travel in the **embed URL** rather than a
+`playerVars` option; the `events` object still carries `onReady`,
+`onStateChange`, and `onError`.
 
 ### playerVars mapping (issue #3)
 
-`buildPlayerVars(videoId)` assembles the `playerVars` object passed to `YT.Player`
-at construction. Each var, its source, and any caveats:
+`buildPlayerVars(videoId)` assembles the player-var set that `buildEmbedUrl()`
+serializes into the embed-URL query string. Each var, its source, and any caveats:
 
 | playerVar | Value | Source |
 |---|---|---|

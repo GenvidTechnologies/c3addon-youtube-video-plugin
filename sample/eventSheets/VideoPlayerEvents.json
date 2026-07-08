@@ -215,26 +215,8 @@
 							"objectClass": "VideoPlayer",
 							"sid": 957457735125510,
 							"parameters": {
-								"url": "\"https://player.gvideo.co/videos/421804_JUpVsXgbH6ky2vAW\"",
-								"no-low-latency": false
+								"url": "\"https://www.youtube.com/watch?v=aqz-KE-bpKQ\""
 							}
-						},
-						{
-							"id": "add-project-subtitle-source",
-							"objectClass": "VideoPlayer",
-							"sid": 203018466277476,
-							"parameters": {
-								"file": {
-									"path": "01_ARGUS_FR.vtt"
-								},
-								"language": "\"fr\"",
-								"label": "\"French (ext)\""
-							}
-						},
-						{
-							"id": "wait-for-previous-actions",
-							"objectClass": "System",
-							"sid": 119138804542107
 						},
 						{
 							"callFunction": "UpdateURLUI",
@@ -266,8 +248,7 @@
 							"objectClass": "VideoPlayer",
 							"sid": 192662466680905,
 							"parameters": {
-								"url": "\"https://player.gvideo.co/videos/2675_cC4PEC0AWy1qu03R\"",
-								"no-low-latency": false
+								"url": "\"https://youtu.be/eRsGyueVLvQ\""
 							}
 						},
 						{
@@ -386,79 +367,9 @@
 					"eventType": "block",
 					"conditions": [
 						{
-							"id": "for-each",
-							"objectClass": "System",
-							"sid": 798292373625503,
-							"parameters": {
-								"object": "SubtitleButton"
-							}
-						}
-					],
-					"actions": [],
-					"sid": 165154468298557,
-					"children": [
-						{
-							"eventType": "block",
-							"conditions": [
-								{
-									"id": "has-subtitle-language",
-									"objectClass": "VideoPlayer",
-									"sid": 476640420114553,
-									"parameters": {
-										"lang": "SubtitleButton.lang"
-									}
-								}
-							],
-							"actions": [
-								{
-									"id": "set-enabled",
-									"objectClass": "SubtitleButton",
-									"sid": 955742329447127,
-									"parameters": {
-										"mode": "enabled"
-									}
-								}
-							],
-							"sid": 770047318837630
-						},
-						{
-							"eventType": "block",
-							"conditions": [
-								{
-									"id": "else",
-									"objectClass": "System",
-									"sid": 281275041917930
-								}
-							],
-							"actions": [
-								{
-									"id": "set-enabled",
-									"objectClass": "SubtitleButton",
-									"sid": 790221843330877,
-									"parameters": {
-										"mode": "disabled"
-									}
-								}
-							],
-							"sid": 993184419283086
-						}
-					]
-				},
-				{
-					"eventType": "block",
-					"conditions": [
-						{
 							"id": "on-clicked",
 							"objectClass": "SubtitleButton",
 							"sid": 936820827566704
-						},
-						{
-							"id": "has-subtitle-language",
-							"objectClass": "VideoPlayer",
-							"sid": 362812108551977,
-							"parameters": {
-								"lang": "SubtitleButton.lang"
-							}
 						}
 					],
 					"actions": [
@@ -503,132 +414,6 @@
 					"sid": 745026215604697
 				},
 				{
-					"eventType": "block",
-					"conditions": [
-						{
-							"id": "on-clicked",
-							"objectClass": "LiveStreamButton",
-							"sid": 188292165007164
-						}
-					],
-					"actions": [
-						{
-							"id": "set-visible",
-							"objectClass": "VideoPlayer",
-							"sid": 535341430795077,
-							"parameters": {
-								"visibility": "invisible"
-							}
-						},
-						{
-							"type": "comment",
-							"text": "Test live stream https://streaming.gcore.com/streaming/editor/1970571"
-						},
-						{
-							"id": "set-url",
-							"objectClass": "VideoPlayer",
-							"sid": 905636149532787,
-							"parameters": {
-								"url": "\"https://player.gvideo.co/streams/421804_1970571\"",
-								"no-low-latency": false
-							}
-						},
-						{
-							"callFunction": "UpdateURLUI",
-							"sid": 191538275064768
-						}
-					],
-					"sid": 926110979382380
-				},
-				{
-					"eventType": "block",
-					"conditions": [
-						{
-							"id": "on-clicked",
-							"objectClass": "SubtitleButton",
-							"sid": 646096726144500
-						},
-						{
-							"id": "has-tags",
-							"objectClass": "SubtitleButton",
-							"sid": 642333556860590,
-							"parameters": {
-								"tags": "\"french\""
-							}
-						},
-						{
-							"id": "has-subtitles",
-							"objectClass": "VideoPlayer",
-							"sid": 811773227538178
-						}
-					],
-					"actions": [
-						{
-							"id": "set-subtitles",
-							"objectClass": "VideoPlayer",
-							"sid": 227474351471246,
-							"parameters": {
-								"language": "\"fr\""
-							}
-						},
-						{
-							"callFunction": "UpdateURLUI",
-							"sid": 744691236836108
-						}
-					],
-					"sid": 846136153447653
-				},
-				{
-					"eventType": "block",
-					"conditions": [
-						{
-							"id": "on-clicked",
-							"objectClass": "NoLowLatencyButton",
-							"sid": 910103314378187
-						}
-					],
-					"actions": [
-						{
-							"id": "set-no-low-latency",
-							"objectClass": "VideoPlayer",
-							"sid": 524359989796029,
-							"parameters": {
-								"noLowLatency": true
-							}
-						},
-						{
-							"callFunction": "UpdateURLUI",
-							"sid": 935848849397527
-						}
-					],
-					"sid": 472035348859412
-				},
-				{
-					"eventType": "block",
-					"conditions": [
-						{
-							"id": "on-clicked",
-							"objectClass": "NoLowLatencyOffButton",
-							"sid": 810714201032938
-						}
-					],
-					"actions": [
-						{
-							"id": "set-no-low-latency",
-							"objectClass": "VideoPlayer",
-							"sid": 652615218523108,
-							"parameters": {
-								"noLowLatency": false
-							}
-						},
-						{
-							"callFunction": "UpdateURLUI",
-							"sid": 814991291271484
-						}
-					],
-					"sid": 361403318235323
-				},
-				{
 					"functionName": "UpdateURLUI",
 					"functionDescription": "",
 					"functionCategory": "",
@@ -653,14 +438,6 @@
 							"sid": 340779605851623,
 							"parameters": {
 								"text": "VideoPlayer.Subtitles"
-							}
-						},
-						{
-							"id": "set-text",
-							"objectClass": "NoLowLatencyText",
-							"sid": 708740814074368,
-							"parameters": {
-								"text": "VideoPlayer.NoLowLatency"
 							}
 						},
 						{
