@@ -1,0 +1,21 @@
+{
+	"domains": {
+		"Video Player": {
+			"description": "The primary demo screen that exercises the YouTube video player plugin — load, playback, volume/mute, captions, playback rate and metadata — driven from VideoPlayerEvents on MainLayout.",
+			"strategy": "core",
+			"glossary": {
+				"VideoPlayer": "The plugin instance placed on MainLayout that wraps the YouTube IFrame player."
+			}
+		},
+		"Second Screen": {
+			"description": "A secondary layout (SecondLayout) whose SecondEvents wires a button that navigates back to MainLayout, exercising multi-layout navigation in the sample.",
+			"strategy": "supporting"
+		}
+	},
+	"overrides": {
+		"eventSheets/VideoPlayerEvents.json": "Video Player",
+		"layouts/MainLayout.json": "Video Player",
+		"eventSheets/SecondEvents.json": "Second Screen",
+		"layouts/SecondLayout.json": "Second Screen"
+	}
+}
