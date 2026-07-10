@@ -19,7 +19,11 @@ then `dist/` is zipped into a `.c3addon` package.
 
 ## Commands
 
-- Lint: `npm run lint`
+- Lint: `npm run lint` — ESLint (`src/**`) plus three surface validators run in
+  sequence: `validate-aces` (`aces.json` ↔ `en-US.json` agreement), `validate-sample`
+  (the `sample/` project vs the current ACE surface — see below), and `validate-docs`
+  (`docs/usage.md` vs the surface, plus an on/off-default regression check — see
+  [ADR-0009](docs/decisions/0009-gate-docs-drift-against-ace-surface.md)).
 - Build: `npm run build` (compiles `src/` → `dist/`, then copies assets)
 - Validate (lint + build): `npm run lint && npm run build`
 - Package: `npm run all:windows` / `npm run all:linux` (lint + build + zip `.c3addon`)
@@ -74,6 +78,8 @@ surface and fails on a retired condition/action id, a stale action param, a stal
 that script — if a legitimate common ACE trips it, add the id/name to the allowlist,
 not to `aces.json`. The validator only covers *stale references*; player-internal
 behavior (does it actually play?) still requires a manual editor load.
+`scripts/validate-docs.mjs` (listed under Commands) is its read-side analog for
+`docs/usage.md`.
 
 **Editing sample JSON safely.** Construct writes these files byte-identically to
 Python's `json.dumps(data, indent="\t", ensure_ascii=False)` with **no trailing
