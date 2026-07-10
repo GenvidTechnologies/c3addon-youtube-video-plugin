@@ -16,10 +16,10 @@
 		{
 			"type": "plugin",
 			"id": "Genvidtech_YouTubeVideoPlugin",
-			"name": "Genvid YouTube Video",
-			"author": "Genvid Technologies, LLC",
+			"name": "YouTube Video Plugin",
+			"author": "Genvid Technologies LLC",
 			"bundled": false,
-			"version": "2.0.0.0",
+			"version": "3.0.1.0",
 			"sdkVersion": 2
 		},
 		{
@@ -203,7 +203,7 @@
 	},
 	"properties": {
 		"description": "YouTube Video Plugin Sample integration",
-		"version": "2.0.0.0",
+		"version": "3.0.1.0",
 		"autoIncrementVersion": false,
 		"author": "Genvid Technologies, LLC",
 		"authorEmail": "support@genvidtech.com",

@@ -151,6 +151,18 @@ deterministic helper like `extractVideoId` is fully verifiable in Node (run a UR
 corpus through the same logic, plus a mirror-parity `diff`), which is the fallback
 when the Playwright MCP is unavailable.
 
+The same "verify in Node against a real captured sequence" move extends to the
+**runtime state machine** the harness can't execute. A runtime-reducer bug (e.g.
+`instance._OnStateChanged`'s reset+ready-gate logic, issue #35) is verifiable
+deterministically: drive `test/player-test.html` via the Playwright MCP to **capture
+the real `YT.Player` event / `getDuration()` sequence** for the scenario (e.g. a
+`loadVideoById` reuse load), then replay that exact sequence through a hand-mirrored
+reducer in a Node script and assert *current code → reproduces the bug*, *fixed →
+passes*. This settles state-machine fixes before the manual C3-editor gate — which is
+what the harness-can't-run-the-runtime caveat above otherwise leaves unverifiable.
+Keep the mirrored reducer faithful to `instance.ts` (same divergence risk as the
+`extractVideoId` mirror).
+
 > **Playwright MCP availability.** The `browser_*` tools come from the `playwright`
 > Claude Code plugin — if they're absent, install/enable it via `/plugin` instead
 > of falling back to a hand-built user-run probe.
@@ -199,40 +211,19 @@ test in Construct 3).
   Use `BUR-0000-...` when there is no associated ticket.
 - Remote: GitHub (`GenvidTechnologies/c3addon-youtube-video-plugin`).
 
-### Fork remotes — read before any `gh` command
+### Remotes (single `origin` — fork network detached)
 
-This repo is a **fork** of `c3addon-gcore-video-plugin`, so it has two remotes:
-`origin` = `GenvidTechnologies/c3addon-youtube-video-plugin` (this plugin) and
-`upstream` = `GenvidTechnologies/c3addon-gcore-video-plugin` (the GCore original).
+This repo has a **single** remote, `origin` =
+`GenvidTechnologies/c3addon-youtube-video-plugin`. It was previously a GitHub
+**fork** of `c3addon-gcore-video-plugin` with an `upstream` remote, but the fork
+network and the `upstream` remote have since been **removed**. Consequences:
 
-With two remotes, **unscoped `gh` commands can resolve to `upstream`** — e.g.
-`gh issue list` / `gh repo view` may target the GCore repo, and the unscoped
-`bugTracker` queries in `.gvt-agent.json` inherit the same default. A default
-is set (`gh repo set-default GenvidTechnologies/c3addon-youtube-video-plugin`); if a
-`gh` call ever hits the wrong repo, re-run that, or pass
-`-R GenvidTechnologies/c3addon-youtube-video-plugin` explicitly. Pull GCore changes
-to cherry-pick with `git fetch upstream`.
-
-### Syncing upstream changes
-
-When asked whether an upstream (GCore) update is relevant, triage the delta from
-the fork point rather than eyeballing tags:
-
-```
-git fetch upstream
-git merge-base HEAD upstream/main          # the fork point
-git log <merge-base>..upstream/main        # commits we don't have
-```
-
-Then classify each commit (this fork has diverged — most are not clean
-cherry-picks):
-
-- **CI / infra / tooling** (workflow bumps, lockfile, build scripts) → usually
-  port cleanly. (e.g. upstream #10 actions-v5 → our PR #19.)
-- **GCore release / version bumps** (`package.json`, `src/addon.json`) → **skip**;
-  the fork has its own identity and version line.
-- **Player-API features / fixes** → relevant *in principle* (the underlying bug
-  often exists here too), but **not** a clean cherry-pick: the GCore player API
-  differs from the YouTube IFrame API, so adapt the behavior empirically (per
-  "Debugging the player") and **file a tracked issue** instead of an ad-hoc port.
-  (e.g. upstream #8 awaitable Load Video → our issue #18.)
+- **`gh` commands always resolve to this repo** — no unscoped-command hazard, so
+  the old `-R …` scoping and `gh repo set-default` workaround are no longer
+  needed (a default is still harmless if set).
+- **GCore changes no longer flow in.** The `git fetch upstream` sync-and-triage
+  workflow is gone. Provenance is unchanged (the code was ported from GCore — see
+  the **Fork status** note and the **Version-number hazard** above, both still
+  accurate), but there is no automatic upstream link. If you ever need to compare
+  against GCore, add the remote manually:
+  `git remote add upstream git@github.com:GenvidTechnologies/c3addon-gcore-video-plugin.git`.

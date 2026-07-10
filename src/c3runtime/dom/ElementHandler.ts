@@ -728,6 +728,16 @@
             return;
           }
           if (duration > 0) {
+            // Forward the new video's duration to the runtime. onReady posts
+            // duration too, but it fires only once per YT.Player — on a reuse
+            // load (loadVideoById) it never re-fires, so without this the runtime
+            // keeps the -1 that _InitializeState() set on "loading" and its ready
+            // gate (currentVolume > -1 && duration > -1) never re-satisfies, so
+            // "Is ready" stays false for every load after the first. Sourcing it
+            // from this poll (not a play-state event) also stays robust when
+            // autoplay is blocked and PLAYING never fires — same rationale as the
+            // readiness poll itself. See issue #35 / ADR-0005.
+            this.PostStateToRuntime({ duration });
             this._settleLoadPromise(myGen);
           }
         }, 100);
