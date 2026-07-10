@@ -31,6 +31,34 @@ then `dist/` is zipped into a `.c3addon` package.
 
 There is no automated test suite.
 
+## Releasing
+
+Releases are **tag-triggered**, not manual. `.github/workflows/release.yml` fires on
+any pushed tag matching `[0-9]*.[0-9]*.*` and does the whole publish:
+`npm ci` → `npm run lint` → `npm run build` → `npm run zip:linux` →
+`gh release create "<tag>" Genvidtech_YouTubeVideoPlugin.c3addon --generate-notes`.
+(`ci.yml` builds and uploads the `.c3addon` as a run artifact on every PR / `main`
+push, but only `release.yml` publishes a GitHub Release.)
+
+So the release ritual is just:
+
+1. Bump the version in **both** `src/addon.json` (preserve the BOM — see
+   "Editing the addon-definition files" below) and `package.json`.
+2. Commit (`chore - Bump version to <ver>`), push `main`.
+3. Push an annotated tag `<ver>`; the workflow builds the `.c3addon` and publishes
+   the release with auto-generated notes.
+
+**Do not also run `gh release create` locally** after pushing the tag: it races the
+workflow, whose own `gh release create` then fails with "a release with the same tag
+name already exists." If you want richer notes, let the workflow publish first, then
+`gh release edit <ver> --notes-file …` to prepend a curated summary above the
+generated changelog.
+
+**Version-number hazard.** The fork inherited GCore's tags — `1.1.0.0`, `1.1.0.1`,
+`2.0.0.0` (this fork's line) and **`2.1.0.0`** (a GCore-upstream commit, *not* on this
+fork's history). Never reuse `2.1.0.0`. The first real YouTube release was `3.0.0.0`
+(2026-07-10).
+
 ## Architecture
 
 - `src/plugin.ts` is **editor-side** (runs in the Construct 3 editor / at export,
