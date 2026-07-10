@@ -6,7 +6,7 @@ Each entry should be a one-line description. Add docs here as they are
 written so the plugin's skills can discover them.
 -->
 
-- [usage.md](usage.md) — user-facing guide for Construct 3 developers. **Being rewritten for YouTube** (still describes the GCore-era surface; see open issues).
+- [usage.md](usage.md) — user-facing, task-oriented guide for Construct 3 developers: instance properties, loading a video, playback control, playback rate, subtitles, chrome, gotchas, and an ACE quick reference.
 - [architecture.md](architecture.md) — editor/runtime split, the DOM message bridge, and why player-API coupling is isolated to `ElementHandler.ts`.
 - [youtube-player-api.md](youtube-player-api.md) — the YouTube IFrame Player API surface used by the plugin (loading the API, building `YT.Player`, events, methods). Currently a scaffold; findings are filled in as the integration is built.
 
