@@ -11,7 +11,7 @@
 					"properties": {
 						"video-url": "",
 						"video-subtitles": "off",
-						"enable-chrome": true,
+						"enable-chrome": false,
 						"loop": false,
 						"start": 0
 					},
