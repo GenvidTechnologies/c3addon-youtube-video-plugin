@@ -19,7 +19,7 @@
 					},
 					"enable-chrome": {
 						"name": "Enable Chrome",
-						"desc": "Show the YouTube player control bar (player built-in UI). Off by default; hosts typically provide their own UI."
+						"desc": "Show the YouTube player control bar (player built-in UI). On by default; disable if the host provides its own UI."
 					},
 					"loop": {
 						"name": "Loop",
