@@ -139,3 +139,22 @@ bridge correctly.
   DOM actions that need a round-trip resolve signal follow the same pattern.
 - The `sawReset` flag and `loadGen` counter are the canonical model for supersession-safe load
   state in this plugin.
+
+## Addendum (2026-07-10) — forward `duration` to the runtime from the poll (issue #35)
+
+The readiness poll (§2) settled the load promise on `getDuration() > 0` but kept that duration
+*inside* `ElementHandler`. Meanwhile the runtime received `duration` only from `onReady`
+(`ElementHandler.ts`), which — per the Context above — fires **once per player construction**.
+So on a reuse load (`loadVideoById`), the runtime never got a fresh duration: the
+`playerState:"loading"` post resets `_duration` to `-1` (`instance._InitializeState()`), and the
+runtime `_isReady` gate (`_currentVolume > -1 && _duration > -1`) never re-satisfied — leaving
+**Is ready** stuck `false` for every video after the first.
+
+The poll's `getDuration() > 0` branch now also `PostStateToRuntime({ duration })` before
+settling. This forwards the new video's duration for both first and reuse loads, from the same
+poll that already treats polled duration (not a play-state event) as the readiness signal — so
+it stays robust when autoplay is blocked and `PLAYING` never fires (§Rejected: resolve at
+`PLAYING`). This does **not** revisit §"Rejected: resolve runtime-side off `_isReady`": the
+awaitable load still resolves DOM-side off `getDuration()`; the runtime `_isReady` gate remains
+a separate display-state concern that simply needs the duration value it was already designed to
+consume.
