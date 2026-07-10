@@ -150,11 +150,26 @@ So on a reuse load (`loadVideoById`), the runtime never got a fresh duration: th
 runtime `_isReady` gate (`_currentVolume > -1 && _duration > -1`) never re-satisfied — leaving
 **Is ready** stuck `false` for every video after the first.
 
-The poll's `getDuration() > 0` branch now also `PostStateToRuntime({ duration })` before
-settling. This forwards the new video's duration for both first and reuse loads, from the same
-poll that already treats polled duration (not a play-state event) as the readiness signal — so
-it stays robust when autoplay is blocked and `PLAYING` never fires (§Rejected: resolve at
-`PLAYING`). This does **not** revisit §"Rejected: resolve runtime-side off `_isReady`": the
-awaitable load still resolves DOM-side off `getDuration()`; the runtime `_isReady` gate remains
-a separate display-state concern that simply needs the duration value it was already designed to
-consume.
+The fix has **two halves**, both needed:
+
+1. **Forward duration from the poll.** The poll's `getDuration() > 0` branch now also
+   `PostStateToRuntime({ duration })` before settling, so the new video's duration reaches the
+   runtime on both first and reuse loads — from the same poll that already treats polled duration
+   (not a play-state event) as the readiness signal, so it stays robust when autoplay is blocked
+   and `PLAYING` never fires (§Rejected: resolve at `PLAYING`).
+
+2. **Stop wiping readiness on transient `"loading"`.** Forwarding duration alone did *not* fix
+   it: the DOM side maps **both** YouTube `BUFFERING` and `UNSTARTED` to `playerState:"loading"`,
+   and those transient transitions keep firing on a reuse load *after* metadata is known
+   (empirically: an `UNSTARTED` fires with `getDuration()` already `> 0`). The runtime called
+   `_InitializeState()` on **every** `"loading"` message, so it wiped `_duration` /
+   `_currentVolume` / `_isReady` right after they were posted, and nothing re-posted both together
+   afterward. `instance.ts` now resets per-video state at the genuine once-per-load trigger —
+   `_SetURL` (a new video requested) — and on a DOM transition to `"offline"`, but **not** on the
+   transient `"loading"` state. Readiness therefore drops to `false` the moment a new video is
+   requested and re-latches once its volume and duration arrive, surviving mid-load buffering.
+
+Neither half revisits §"Rejected: resolve runtime-side off `_isReady`": the awaitable load still
+resolves DOM-side off `getDuration()`; the runtime `_isReady` gate remains a separate
+display-state concern — half (1) gives it the duration value it consumes, half (2) stops that
+value being destroyed by transient buffering.

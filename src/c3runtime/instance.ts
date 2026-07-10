@@ -79,9 +79,11 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		};
 	}
 
-	// Reset per-video state when (re)loading or unloading a video. Does NOT clear
-	// _isInitialized: that tracks whether the player API has loaded, which
-	// persists across video changes.
+	// Reset per-video state. Called at the once-per-load trigger points: _SetURL
+	// (a new video requested) and a DOM-side transition to "offline" (video
+	// unloaded). NOT called on the transient "loading" playerState (see
+	// _OnStateChanged / issue #35). Does NOT clear _isInitialized: that tracks
+	// whether the player API has loaded, which persists across video changes.
 	_InitializeState() {
 		this._isReady = false;
 
@@ -115,7 +117,17 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 
 			if (state.playerState) {
 				switch (state.playerState) {
-					case "loading":
+					// Only a transition to "offline" (no video) wipes per-video
+					// state here. "loading" must NOT reset: the DOM side posts
+					// "loading" not just for a genuine new load but on every
+					// transient YouTube BUFFERING/UNSTARTED transition — and those
+					// fire AFTER metadata is known on a reuse load, so resetting on
+					// them wipes _duration/_currentVolume/_isReady back to their
+					// reset values right after they were posted, leaving the ready
+					// gate below unable to re-satisfy ("Is ready" stuck false for
+					// every video after the first). A genuine new load resets in
+					// _SetURL instead (which is the real once-per-load trigger).
+					// See issue #35.
 					case "offline": {
 						this._InitializeState();
 						break;
@@ -253,6 +265,16 @@ class YouTubeVideoInstance extends globalThis.ISDKDOMInstanceBase {
 		// stops the previous video's subtitle selection from leaking onto the
 		// new one.
 		this._subtitles = "off";
+		// Reset per-video state HERE — the genuine once-per-load trigger — rather
+		// than on the DOM-side "loading" playerState message, which also fires on
+		// transient buffering and would wipe readiness after metadata is known
+		// (see the _OnStateChanged "loading" note and issue #35). "Is ready" thus
+		// correctly drops to false the moment a new video is requested and re-
+		// latches once the new video's volume and duration arrive. Keep
+		// _playerState as "loading" (not the "offline" _InitializeState sets) so a
+		// load-in-progress reads as loading until the DOM confirms.
+		this._InitializeState();
+		this._playerState = "loading";
 		// Drive the load over the async DOM bridge instead of the fire-and-forget
 		// _updateElementState(): the "loadVideo" handler returns a promise that
 		// resolves once the new video's metadata is loaded (or settles on
