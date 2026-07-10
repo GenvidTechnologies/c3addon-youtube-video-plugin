@@ -151,6 +151,18 @@ deterministic helper like `extractVideoId` is fully verifiable in Node (run a UR
 corpus through the same logic, plus a mirror-parity `diff`), which is the fallback
 when the Playwright MCP is unavailable.
 
+The same "verify in Node against a real captured sequence" move extends to the
+**runtime state machine** the harness can't execute. A runtime-reducer bug (e.g.
+`instance._OnStateChanged`'s reset+ready-gate logic, issue #35) is verifiable
+deterministically: drive `test/player-test.html` via the Playwright MCP to **capture
+the real `YT.Player` event / `getDuration()` sequence** for the scenario (e.g. a
+`loadVideoById` reuse load), then replay that exact sequence through a hand-mirrored
+reducer in a Node script and assert *current code → reproduces the bug*, *fixed →
+passes*. This settles state-machine fixes before the manual C3-editor gate — which is
+what the harness-can't-run-the-runtime caveat above otherwise leaves unverifiable.
+Keep the mirrored reducer faithful to `instance.ts` (same divergence risk as the
+`extractVideoId` mirror).
+
 > **Playwright MCP availability.** The `browser_*` tools come from the `playwright`
 > Claude Code plugin — if they're absent, install/enable it via `/plugin` instead
 > of falling back to a hand-built user-run probe.

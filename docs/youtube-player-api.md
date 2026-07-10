@@ -149,6 +149,23 @@ These map to the development-task issues:
   polled while playing (YouTube has no `timeupdate` event). `onError` maps the YT
   error codes to readable messages. The build-time caption case is resolved (#6,
   see the Captions bullet below); still open: live caption switching.
+
+  **Readiness-reset hazard (issue #35).** `BUFFERING`, `UNSTARTED`, and `CUED` all
+  map to `playerState:"loading"`, and — crucially — these transient transitions
+  keep firing *after* metadata is known on a **reuse** load (`loadVideoById`):
+  empirically an `UNSTARTED` fires with `getDuration()` already `> 0`. So the
+  runtime must **not** tie its per-video reset (`_InitializeState()`, which clears
+  `_duration` / `_currentVolume` / `_isReady`) to the `"loading"` message — doing so
+  wipes those values right after they were posted, and since nothing re-posts both
+  together afterward, the ready gate (`_currentVolume > -1 && _duration > -1`) never
+  re-satisfies and **"Is ready" stays false for every video after the first.**
+  Reset instead at the genuine once-per-load trigger — `instance._SetURL` (a new
+  video was requested) — and on a real `"offline"` transition. Two coupled facts
+  make this necessary: `onReady` is **once per player** (so it can't re-post
+  `duration` on reuse — the awaitable-load poll forwards it instead, see the
+  Awaitable Load Video bullet), and the transient `"loading"` states outlive the
+  metadata. See [decisions/0005-awaitable-load-video.md](decisions/0005-awaitable-load-video.md)'s
+  issue-#35 addendum.
 - **Audio lifecycle.** *Done (#4).* `lastVolume`/`lastMuted` (the user's intent via
   the ACEs) are restored on `onReady` and re-applied on each `loadVideoById` (which
   does not re-fire `onReady`); the autoplay forced-mute is reconciled by unmuting on
