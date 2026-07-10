@@ -74,6 +74,9 @@ surface and fails on a retired condition/action id, a stale action param, a stal
 that script — if a legitimate common ACE trips it, add the id/name to the allowlist,
 not to `aces.json`. The validator only covers *stale references*; player-internal
 behavior (does it actually play?) still requires a manual editor load.
+`npm run lint` also runs `scripts/validate-docs.mjs`, an analogous gate on
+`docs/usage.md` (ACE/property references plus an on/off-default regression
+check) — see [ADR-0009](docs/decisions/0009-gate-docs-drift-against-ace-surface.md).
 
 **Editing sample JSON safely.** Construct writes these files byte-identically to
 Python's `json.dumps(data, indent="\t", ensure_ascii=False)` with **no trailing
