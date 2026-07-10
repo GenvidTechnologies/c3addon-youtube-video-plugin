@@ -1,6 +1,6 @@
 {
   "name": "c3addon-youtube-video-player",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Construct3 YouTube Video Player add-on by Genvid",
   "license": "MIT-0",
   "devDependencies": {
