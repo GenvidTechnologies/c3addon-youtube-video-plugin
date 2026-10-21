@@ -1,3 +1,11 @@
+---
+type: decision-record
+title: 'Playback-rate and video-metadata ACEs'
+description: 'Playback rate (pass-through SetPlaybackRate, authoritative GetPlaybackRate, indexed GetAvailablePlaybackRate/Count) and metadata (GetVideoTitle via unofficial getVideoData(), GetPlayerUrl, polled GetVideoLoadedFraction) ACEs; playlist load/navigation split out and deferred to a follow-up issue (issue #12, epic #1).'
+tags: [decisions]
+status: stable
+---
+
 # 0008. Playback-rate and video-metadata ACEs
 
 - **Status:** Accepted

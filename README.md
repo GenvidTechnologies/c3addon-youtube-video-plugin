@@ -10,7 +10,7 @@ A Construct 3 plugin that embeds and controls YouTube videos via the
 
 ## To use
 
-See [`docs/usage.md`](docs/usage.md) for a task-oriented guide.
+See [`wiki/usage.md`](wiki/usage.md) for a task-oriented guide.
 
 ## To develop
 

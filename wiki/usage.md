@@ -1,3 +1,10 @@
+---
+type: reference
+title: YouTube Video Plugin Usage Guide
+description: User-facing, task-oriented guide for Construct 3 developers - instance properties, loading a video, playback control, playback rate, subtitles, chrome, gotchas, and an ACE quick reference.
+tags: [usage, aces, construct3]
+---
+
 # YouTube Video Plugin — Usage Guide
 
 **Audience:** Construct 3 game developers using the plugin's ACEs
@@ -296,3 +303,9 @@ For the mechanism behind these, see [`youtube-player-api.md`](youtube-player-api
 | `GetVideoTitle` | string | The current video's title. | Unofficial API; may be `""` for live/age-restricted videos. |
 | `GetPlayerUrl` | string | The player's current canonical URL. | May differ from `URL` — see [§7](#7-gotchas--caveats). |
 | `GetVideoLoadedFraction` | number | Fraction (0..1) of the video that has buffered. | |
+
+## Related
+
+- [Architecture](architecture.md) - editor/runtime split and the single ElementHandler seam behind these ACEs.
+- [YouTube IFrame Player API notes](youtube-player-api.md) - the player-API mechanics behind the gotchas above.
+- [Decision Records](decisions/index.md) - the design rationale for the ACE surface.

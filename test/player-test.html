@@ -98,7 +98,7 @@
       Build a player with <code>loop:1, playlist:&lt;id&gt;</code>, then call
       <code>loadVideoById</code> with a <em>different</em> id — does looping
       survive the reuse path?
-      (<code>docs/youtube-player-api.md</code> deferred question.)
+      (<code>wiki/youtube-player-api.md</code> deferred question.)
     </p>
     <div class="row">
       <label>Loop id: <input id="probe-loop-id" type="text" class="narrow" value="M7lc1UVf-VE" /></label>
@@ -116,7 +116,7 @@
     <p style="margin:.25rem 0;font-size:.85rem;">
       Build with vs without <code>modestbranding:1</code> — YouTube removed this
       parameter in 2023; passing it should have no visible effect.
-      (<code>docs/youtube-player-api.md</code> deferred question.)
+      (<code>wiki/youtube-player-api.md</code> deferred question.)
     </p>
     <div class="row">
       <button id="btn-probe-modest-on">Build with modestbranding:1</button>
@@ -130,7 +130,7 @@
     <p style="margin:.25rem 0;font-size:.85rem;">
       After autoplay-muted start, on the first <code>PLAYING</code> event call
       <code>unMute()</code> without any user gesture — does the browser autoplay
-      policy permit it? Feeds issue #4 / <code>docs/youtube-player-api.md</code>.
+      policy permit it? Feeds issue #4 / <code>wiki/youtube-player-api.md</code>.
     </p>
     <div class="row">
       <button id="btn-probe-autoplay-build">Build with autoplay+muted, unmute on PLAYING</button>
@@ -457,7 +457,7 @@
     // ════════════════════════════════════════════════════════════════════════════
     // Probe: Loop survival
     // Does loop:1 survive a loadVideoById() call with a different video id?
-    // (docs/youtube-player-api.md: playerVars are build-time only)
+    // (wiki/youtube-player-api.md: playerVars are build-time only)
     // ════════════════════════════════════════════════════════════════════════════
     document.getElementById("btn-probe-loop-build").onclick = async () => {
       const id = extractVideoId(document.getElementById("probe-loop-id").value.trim());
@@ -511,7 +511,7 @@
     // ════════════════════════════════════════════════════════════════════════════
     // Probe: Autoplay unmute
     // On first PLAYING, call unMute() without a user gesture. Does the browser
-    // autoplay policy allow it? (feeds issue #4 / docs/youtube-player-api.md)
+    // autoplay policy allow it? (feeds issue #4 / wiki/youtube-player-api.md)
     // ════════════════════════════════════════════════════════════════════════════
     document.getElementById("btn-probe-autoplay-build").onclick = async () => {
       const id = extractVideoId(document.getElementById("video-input").value.trim()) || "M7lc1UVf-VE";
@@ -566,7 +566,7 @@
     // Probe: Captions
     // Uses unofficial setOption/getOption captions module. All calls guarded in
     // try/catch so a missing/broken module doesn't break the harness.
-    // (feeds issue #6 / docs/youtube-player-api.md)
+    // (feeds issue #6 / wiki/youtube-player-api.md)
     // ════════════════════════════════════════════════════════════════════════════
     document.getElementById("btn-probe-cc-build").onclick = async () => {
       const lang = document.getElementById("probe-cc-lang").value.trim() || "en";

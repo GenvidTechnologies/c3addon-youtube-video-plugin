@@ -1,3 +1,10 @@
+---
+type: convention
+title: Issue Triage Conventions
+description: Issue-triage conventions (flat-label variant) consumed by /gvt-dev:triage-issues - category labels, required fields, splitting/duplicates/dependencies policy, and the gh mutation recipes.
+tags: [process, triage, issues]
+---
+
 # Issue Triage Conventions
 
 > Project conventions consumed by `/gvt-dev:triage-issues`. The companion

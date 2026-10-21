@@ -1,3 +1,11 @@
+---
+type: decision-record
+title: 'Mute state (`audioState`) is authoritative from the DOM side, decoupled from reported volume'
+description: 'Mute state (audioState) is authoritative from the DOM seam (YT.Player.isMuted()), decoupled from reported volume; establishes the pattern for all future player-derived state (issue #4, epic #1).'
+tags: [decisions]
+status: stable
+---
+
 # 0003. Mute state (`audioState`) is authoritative from the DOM side, decoupled from reported volume
 
 - **Status:** Accepted

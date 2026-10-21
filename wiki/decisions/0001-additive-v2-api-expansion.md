@@ -1,3 +1,11 @@
+---
+type: decision-record
+title: 'Additive v2 API expansion with construction-time rebuild discipline'
+description: 'Inherited from the GCore upstream (historical). Additive-only ACE expansion, construction-time rebuild discipline, and empirical verification mandate for the GCore v2 API conversion. Its "(issue #1)" refers to the upstream GCore repo, not this fork''s issue #1 (the YouTube port epic).'
+tags: [decisions]
+status: stable
+---
+
 # 0001. Additive v2 API expansion with construction-time rebuild discipline
 
 - **Status:** Accepted

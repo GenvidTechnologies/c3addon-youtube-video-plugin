@@ -1,3 +1,11 @@
+---
+type: decision-record
+title: 'Awaitable Load Video — polled `getDuration()` readiness signal'
+description: 'Load Video made awaitable via polled getDuration() > 0; explains why GCore''s resolve-at-Ready doesn''t port and why PLAYING is unreliable; settle-on-all-outcomes semantics, generation counter, 15s timeout (issue #18).'
+tags: [decisions]
+status: stable
+---
+
 # 0005. Awaitable Load Video — polled `getDuration()` readiness signal
 
 - **Status:** Accepted
