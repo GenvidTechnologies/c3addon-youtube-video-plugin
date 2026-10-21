@@ -25,7 +25,7 @@ const PLUGIN_CLASS =
       this._info.SetName(self.lang(".name"));
       this._info.SetDescription(self.lang(".description"));
       this._info.SetCategory(PLUGIN_CATEGORY);
-      this._info.SetAuthor("Genvid Technologies LLC");
+      this._info.SetAuthor("Genvid Technologies, LLC");
       this._info.SetHelpUrl(self.lang(".help-url"));
       this._info.SetPluginType("world"); // mark as world plugin since it's placed in the layout
       this._info.SetIsResizable(true); // allow to be resized
