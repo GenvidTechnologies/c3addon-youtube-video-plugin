@@ -15,6 +15,11 @@ before. If a past entry itself needs correcting, add a new entry that says
 so; never edit or remove the old one in place. See `wiki/schema.md` for
 the full maintenance schema.
 
+## 2026-10-22
+
+* **Update**: sample-project.md — added the identity-metadata (author) lockstep rule and the validate-sample / validate-addons blind spots; source: issue #37 and session insight.
+* **Update**: releasing.md — added release-time verification of addon author metadata; source: issue #37 and session insight.
+
 ## 2026-10-21
 
 * **Creation**: architecture.md — distilled from `raw/2026-10-21-docs-architecture.md` (moved from `docs/architecture.md`).

@@ -1,10 +1,10 @@
 ---
 type: convention
 title: The sample project and C3 domain tooling
-description: The sample/ Construct 3 project - its lockstep coupling to the ACE/property surface, the validate-sample gate, safe programmatic JSON editing, and the c3-domain-manager setup gotchas.
+description: The sample/ Construct 3 project - its lockstep coupling to the ACE/property surface and to the addon's identity metadata (author), the validate-sample gate and what it misses, safe programmatic JSON editing, and the c3-domain-manager setup gotchas.
 tags: [sample, construct3, validation, c3-domain-manager, json]
 stale_after: 2027-04-21
-generated: { by: process:maintain-wiki, at: 2026-10-21T00:00:00Z }
+generated: { by: process:maintain-wiki, at: 2026-10-22T00:00:00Z }
 sources:
   - id: gotchas
     resource: ../raw/2026-10-21-claude-md-gotchas.md
@@ -13,6 +13,10 @@ sources:
   - id: gotchas-upstream
     resource: https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin/blob/fb7fccf/CLAUDE.md
     title: CLAUDE.md in the c3addon-youtube-video-plugin repository at fb7fccf
+  - id: issue-37
+    resource: https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin/issues/37
+    title: Issue #37 — addon.json author vs SetAuthor mismatch
+    last_modified: 2026-10-22
 ---
 
 # The sample project (`sample/`)
@@ -41,6 +45,26 @@ behavior (does it actually play?) still requires a manual editor load.
 `scripts/validate-docs.mjs` (listed under the repo's lint commands) is its read-side
 analog for [usage.md](usage.md) (see
 [ADR-0009](decisions/0009-gate-docs-drift-against-ace-surface.md)).[^gotchas]
+
+## Coupled to the addon's identity metadata
+
+The coupling is not only to the ACE/property surface. When Construct 3 saves a
+project it writes the editor-side `SetAuthor` value from `src/plugin.ts` into
+`sample/project.c3proj` `usedAddons[].author` for this addon (id
+`Genvidtech_YouTubeVideoPlugin`, `bundled: false`). An author-string change must
+therefore land in lockstep in **three** places: `src/addon.json` `author`,
+`src/plugin.ts` `SetAuthor(...)`, and the sample's own `usedAddons` entry.
+Hand-fixing only the sample is undone by the next editor save; fixing only
+`addon.json` leaves a mismatch. Issue #37 was fixed in commit 66c58db (both now
+`Genvid Technologies, LLC`).[^issue-37]
+
+Neither gate sees this. `validate-sample` covers ACE/property references only, and
+construct3-chef's `validate-addons` only validates *bundled* `.c3addon` packages
+under the project's `addons/`; its `addon` path argument must stay inside the C3
+project root (`sample/`), so it can't be pointed at `../src` or `../dist`. Here it
+reports "Checked 0 bundled addon(s): all consistent" — a vacuous pass, not
+evidence. Verify by grepping the three locations instead. For the release-time
+check, see [Releasing](releasing.md).[^issue-37]
 
 ## Editing sample JSON safely
 
@@ -84,5 +108,7 @@ Regenerate the committed `sample/extracted/domain-index/` after changing the sam
 - [Usage guide](usage.md) — the read-side analog gated by `validate-docs.mjs`.
 - [Editing the addon-definition files (UTF-8 BOM)](addon-manifest-bom.md) — the BOM'd manifests, in contrast to the BOM-less sample files.
 - [Debugging the player](debugging-the-player.md) — the manual verification gate for player-internal behavior.
+- [Releasing](releasing.md) — release-time verification of the addon's author metadata.
 
 [^gotchas]: Distilled from the "The sample project (`sample/`)" and "C3 domain tooling (`sample/`)" sections of the captured `CLAUDE.md` (`../raw/2026-10-21-claude-md-gotchas.md`).
+[^issue-37]: Issue #37 and the session that fixed it in commit 66c58db (https://github.com/GenvidTechnologies/c3addon-youtube-video-plugin/issues/37).

@@ -24,9 +24,9 @@ See [schema.md](schema.md) for the page format and maintenance rules.
 
 ## Development
 
-* [The sample project and C3 domain tooling](sample-project.md) - The sample/ Construct 3 project - its lockstep coupling to the ACE/property surface, the validate-sample gate, safe programmatic JSON editing, and the c3-domain-manager setup gotchas.
+* [The sample project and C3 domain tooling](sample-project.md) - The sample/ Construct 3 project - its lockstep coupling to the ACE/property surface and to the addon's identity metadata (author), the validate-sample gate and what it misses, safe programmatic JSON editing, and the c3-domain-manager setup gotchas.
 * [Editing the addon-definition files (UTF-8 BOM)](addon-manifest-bom.md) - The three SDK manifest files (addon.json, aces.json, en-US.json) are UTF-8 with a BOM that must be preserved, and how to edit them when a multi-line Edit fails to match.
-* [Releasing](releasing.md) - The tag-triggered release process - what release.yml does, the three-step ritual, why not to run gh release create locally, and the never-reuse-2.1.0.0 version-number hazard.
+* [Releasing](releasing.md) - The tag-triggered release process - what release.yml does, the three-step ritual, why not to run gh release create locally, the never-reuse-2.1.0.0 version-number hazard, and verifying addon identity metadata (author) at release time.
 
 ## Process
 
