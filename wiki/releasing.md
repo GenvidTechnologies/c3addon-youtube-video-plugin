@@ -55,14 +55,14 @@ fork's history). Never reuse `2.1.0.0`. The first real YouTube release was `3.0.
 
 The addon's `author` must agree between `src/addon.json` and the editor-side
 `SetAuthor(...)` in `src/plugin.ts` (the three-place lockstep rule, including the
-sample project, is in [The sample project](sample-project.md)). Issue #37's second
-acceptance criterion — a released `.c3addon` carries matching author values in
-`addon.json` and `plugin.js` — is only verifiable end to end downstream, by running
-construct3-chef `validate-addons` in a consuming project that bundles the addon
-(e.g. genvid-holdings/burbank, which plans to bundle it — burbank#192). Locally,
-after `npm run build`, check that `dist/addon.json` `author` and `dist/plugin.js`
-`SetAuthor` agree. #37 is tracked as Refs (not closed) until a release ships the
-fix.[^issue-37]
+sample project, is in [The sample project](sample-project.md)). That a released
+`.c3addon` carries matching author values in `addon.json` and `plugin.js` is only
+verifiable end to end downstream, by running construct3-chef `validate-addons` in
+a consuming project that bundles the addon (e.g. genvid-holdings/burbank, which
+plans to bundle it — burbank#192). Locally, after `npm run build`, check that
+`dist/addon.json` `author` and `dist/plugin.js` `SetAuthor` agree. #37 itself only
+requires the two source strings to match, so it closes with the fix, not with a
+release.[^issue-37]
 
 ## Related
 

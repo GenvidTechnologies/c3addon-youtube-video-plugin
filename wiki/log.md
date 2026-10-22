@@ -17,6 +17,7 @@ the full maintenance schema.
 
 ## 2026-10-22
 
+* **Update**: releasing.md — #37 no longer waits for a release to close: its acceptance criteria were edited down to the source-string match, so it closes with the fix (PR #38); corrects the earlier "Refs until a release" note below. Source: issue #37 as edited 2026-10-22.
 * **Update**: sample-project.md — added the identity-metadata (author) lockstep rule and the validate-sample / validate-addons blind spots; source: issue #37 and session insight.
 * **Update**: releasing.md — added release-time verification of addon author metadata; source: issue #37 and session insight.
 
