@@ -78,19 +78,23 @@ Examples:
 - `fix - Fix SecondEvents`
 - `chore - Update README, clean up comment`
 
+No Jira prefix (`BUR-…`). Issues are tracked in this repo's GitHub issues;
+reference one as `(#N)` at the end of the subject, or `Refs #N` / `Closes #N` in
+the body.
+
 ## Pull Request Format
 
-Title typically mirrors the branch / ticket (e.g. `BUR-4919-no-low-latency`).
+Title mirrors the branch name (e.g. `chore-docs-to-wiki`), with no Jira prefix.
 Body should summarize the change and how it was verified (lint + build, manual
-test in Construct 3).
+test in Construct 3), and link its GitHub issue with `Closes #N` (or `Refs #N`
+when the PR doesn't fully resolve it).
 
 ## Branching
 
 - Base branch: `main`.
-- Branch naming: `BUR-<ticket>-<kebab-description>` (e.g. `BUR-4919-no-low-latency`)
-  for ticketed work. With no associated ticket, use `<type>-<kebab-description>`, where
-  `<type>` is the commit type (`feat`, `fix`, `chore`) — e.g. `chore-docs-to-wiki` —
-  instead of the older `BUR-0000-...` form.
+- Branch naming: `<type>-<kebab-description>`, where `<type>` is the commit type
+  (`feat`, `fix`, `chore`) — e.g. `chore-docs-to-wiki`, `fix-ready-gate-reset`.
+  No Jira prefix: the older `BUR-<ticket>-…` / `BUR-0000-…` forms are retired.
 - Remote: GitHub (`GenvidTechnologies/c3addon-youtube-video-plugin`).
 
 ### Remotes (single `origin` — fork network detached)
