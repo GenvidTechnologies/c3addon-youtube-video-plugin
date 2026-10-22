@@ -6,7 +6,7 @@
 player-internal behaviour without the Construct runtime in the way. There is no
 automated test suite; this is a manual harness.
 
-See [`../docs/youtube-player-api.md`](../docs/youtube-player-api.md) for the
+See [`../wiki/youtube-player-api.md`](../wiki/youtube-player-api.md) for the
 full write-up of the API surface the plugin uses.
 
 ## Running it
@@ -46,7 +46,7 @@ The finalized controls mirror the plugin's ACEs:
 ## Exploratory probes
 
 The page also contains labeled probe sections (marked "player-internal, NOT
-plugin ACEs") that settle the empirical questions `docs/youtube-player-api.md`
+plugin ACEs") that settle the empirical questions `wiki/youtube-player-api.md`
 defers to issue #10:
 
 | Probe | Question |
@@ -58,7 +58,7 @@ defers to issue #10:
 | **Quality (advisory)** | What does `getAvailableQualityLevels()` / `setPlaybackQuality()` actually return/do? Advisory-only; numeric ABR quality ACEs were retired — see ADR-0004. |
 
 The **Loop survival** and **modestbranding** probes settle empirical questions
-deferred in [`../docs/youtube-player-api.md`](../docs/youtube-player-api.md); the
+deferred in [`../wiki/youtube-player-api.md`](../wiki/youtube-player-api.md); the
 others feed tracked issues (autoplay → #4, captions → #6) or an existing decision
 (quality → ADR-0004).
 

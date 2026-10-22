@@ -1,3 +1,11 @@
+---
+type: decision-record
+title: 'playerVars mapping constraints for issue #3'
+description: 'playerVars wiring constraints from issue #3: mute ownership deferred to #4, append-only positional property contract (idx5/idx6 for loop/start; renumber in #7), origin scheme guard, modestbranding omitted, loop/start build-time-only.'
+tags: [decisions]
+status: stable
+---
+
 # 0002. playerVars mapping constraints for issue #3
 
 - **Status:** Accepted

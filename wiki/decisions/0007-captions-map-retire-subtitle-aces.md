@@ -1,3 +1,11 @@
+---
+type: decision-record
+title: 'Captions: Map On/Off + Preferred Language, Retire the Rest'
+description: 'Captions: keep and enrich video-subtitles/SetSubtitles/Subtitles (wires cc_lang_pref alongside cc_load_policy, both build-time only); retire the 9 GCore-era side-loaded/enumeration ACEs with no YouTube equivalent; live switching via the unofficial captions module deferred to a future issue (issue #6, epic #1).'
+tags: [decisions]
+status: stable
+---
+
 # 0007. Captions: Map On/Off + Preferred Language, Retire the Rest
 
 - **Status:** Accepted

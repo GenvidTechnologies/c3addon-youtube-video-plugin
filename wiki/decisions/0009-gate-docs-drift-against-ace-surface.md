@@ -1,3 +1,11 @@
+---
+type: decision-record
+title: 'Gate docs/usage.md drift against the ACE surface'
+description: 'scripts/validate-docs.mjs gates usage.md only (README/TOC carry no checkable ACE content) via section-8-table + backticked-PascalCase resolution against the ACE surface (Check A), plus an en-US.json-desc-vs-plugin.ts-default regression guard (Check B) so the enable-chrome class of drift (issue #30, PR #33) can''t recur silently; closes issue #31.'
+tags: [decisions]
+status: stable
+---
+
 # 0009. Gate docs/usage.md drift against the ACE surface
 
 - **Status:** Accepted

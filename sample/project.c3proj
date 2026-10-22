@@ -17,7 +17,7 @@
 			"type": "plugin",
 			"id": "Genvidtech_YouTubeVideoPlugin",
 			"name": "YouTube Video Plugin",
-			"author": "Genvid Technologies LLC",
+			"author": "Genvid Technologies, LLC",
 			"bundled": false,
 			"version": "3.0.1.0",
 			"sdkVersion": 2

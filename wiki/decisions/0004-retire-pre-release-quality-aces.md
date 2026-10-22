@@ -1,3 +1,11 @@
+---
+type: decision-record
+title: 'Retire quality ACE surface (pre-release removal policy)'
+description: 'Pre-release ACE removal policy; retires SetQuality, GetCurrentQuality, GetQualityCount (issue #5, epic #1). Supersedes ADR-0001 section 1 for the pre-release window.'
+tags: [decisions]
+status: stable
+---
+
 # 0004. Retire quality ACE surface (pre-release removal policy)
 
 - **Status:** Accepted

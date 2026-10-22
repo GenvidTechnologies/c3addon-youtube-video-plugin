@@ -3,14 +3,14 @@
 // =============================================================================
 // YouTube IFrame Player API integration — SCAFFOLD / STUB.
 //
-// This is the *only* file coupled to the player API (see docs/architecture.md).
+// This is the *only* file coupled to the player API (see wiki/architecture.md).
 // It was ported from the GCore player handler: the runtime <-> DOM message
 // bridge and the public method surface (OnPlay/OnPause/OnSeek/OnSetVolume/
 // OnResize/UpdateState/Destroy) are preserved so the rest of the
 // plugin compiles and runs unchanged. The actual YouTube playback wiring —
 // constructing the YT.Player, mapping its events to runtime state, captions,
 // etc. — is intentionally left as TODOs and tracked in this repo's
-// GitHub issues. See docs/youtube-player-api.md.
+// GitHub issues. See wiki/youtube-player-api.md.
 //
 // API reference: https://developers.google.com/youtube/iframe_api_reference
 // =============================================================================
@@ -393,7 +393,7 @@
       //     time). Only mark it when actually isolated — credentialless drops
       //     cookies, so leaving it off elsewhere keeps sign-in-gated playback
       //     working. Verified empirically under COOP/COEP (see
-      //     docs/youtube-player-api.md).
+      //     wiki/youtube-player-api.md).
       const iframe = document.createElement("iframe");
       if ((globalThis as { crossOriginIsolated?: boolean }).crossOriginIsolated) {
         iframe.setAttribute("credentialless", "");

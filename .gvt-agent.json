@@ -16,7 +16,15 @@
   },
   "features": {},
   "paths": {
-    "c3project": "sample/project.c3proj"
+    "c3project": "sample/project.c3proj",
+    "docs/TOC.md": "wiki/index.md",
+    "docs/architecture.md": "wiki/architecture.md",
+    "docs/decisions/": "wiki/decisions/",
+    "docs/issue-triage.md": "wiki/issue-triage.md"
+  },
+  "wiki": {
+    "wikiDir": "wiki",
+    "rawDir": "raw"
   },
   "bugTracker": {
     "kind": "github",

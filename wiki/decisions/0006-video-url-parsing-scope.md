@@ -1,3 +1,11 @@
+---
+type: decision-record
+title: 'Video URL Parsing Scope — Parse-Only, Defer Playlist Load/Nav'
+description: 'extractVideoId() scoped to parse-only: locks the guaranteed single-video URL set (adds /live/), documents the host-agnostic guarantee (nocookie/mobile/music subdomains) and the ignored list=/t=/si=/index= params; playlist load/navigation deferred to issue #12 (issue #8).'
+tags: [decisions]
+status: stable
+---
+
 # 0006. Video URL Parsing Scope — Parse-Only, Defer Playlist Load/Nav
 
 - **Status:** Accepted

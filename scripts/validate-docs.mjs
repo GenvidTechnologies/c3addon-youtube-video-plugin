@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Validate docs/usage.md against the current ACE/property surface, so it stops
+// Validate wiki/usage.md against the current ACE/property surface, so it stops
 // silently drifting the way README/usage prose otherwise can: `npm run build`
 // copies only src/, ESLint is scoped to *.ts/*.json, and validate-sample.mjs
 // only checks the sample/ project — nothing gates markdown. See CLAUDE.md
@@ -8,7 +8,7 @@
 // Runs two independent checks:
 //
 // CHECK A — doc-drift gate. Every ACE/property name referenced in
-// docs/usage.md's "8. Quick reference" tables, and every backticked
+// wiki/usage.md's "8. Quick reference" tables, and every backticked
 // PascalCase identifier anywhere in the doc, must resolve to a real
 // action/condition/expression/property name in the current
 // src/aces.json + src/lang/en-US.json surface (or be on the ALLOWLIST of
@@ -82,7 +82,7 @@ for (let m; (m = propRe.exec(pluginTs)); ) {
 const problems = [];
 
 // --- CHECK A: doc-drift gate --------------------------------------------------
-const usage = readFileSync("docs/usage.md", "utf8");
+const usage = readFileSync("wiki/usage.md", "utf8");
 const lines = usage.split(/\r?\n/);
 
 const isHeading = (line) => /^#{1,6}\s/.test(line);
@@ -109,7 +109,7 @@ const firstCellToken = (row) => {
 
 const qrHeadingIdx = lines.findIndex((l) => /^##\s+8\.\s*Quick reference/i.test(l.trim()));
 if (qrHeadingIdx === -1) {
-  problems.push('docs/usage.md: could not find "## 8. Quick reference" heading');
+  problems.push('wiki/usage.md: could not find "## 8. Quick reference" heading');
 } else {
   for (const [heading, kind] of [
     ["### Actions", "aceName"],
@@ -120,7 +120,7 @@ if (qrHeadingIdx === -1) {
       (l, i) => i > qrHeadingIdx && l.trim() === heading
     );
     if (headingIdx === -1) {
-      problems.push(`docs/usage.md: could not find "${heading}" under "## 8. Quick reference"`);
+      problems.push(`wiki/usage.md: could not find "${heading}" under "## 8. Quick reference"`);
       continue;
     }
     const rows = tableRowsAfter(headingIdx);
@@ -131,7 +131,7 @@ if (qrHeadingIdx === -1) {
       const resolved =
         kind === "exprName" ? exprNames.has(token.toLowerCase()) : displayNames.has(normalize(token));
       if (!resolved) {
-        problems.push(`docs/usage.md: "${heading}" row references unknown ${kind === "exprName" ? "expression" : "ACE"} "${token}"`);
+        problems.push(`wiki/usage.md: "${heading}" row references unknown ${kind === "exprName" ? "expression" : "ACE"} "${token}"`);
       }
     }
   }
@@ -143,7 +143,7 @@ for (let m; (m = backtickRe.exec(usage)); ) {
   if (ALLOWLIST_PREFIXES.some((p) => token.startsWith(p))) continue;
   const resolved = exprNames.has(token.toLowerCase()) || displayNames.has(normalize(token));
   if (!resolved) {
-    problems.push(`docs/usage.md: backticked identifier "${token}" is not in the current ACE surface (and not allowlisted)`);
+    problems.push(`wiki/usage.md: backticked identifier "${token}" is not in the current ACE surface (and not allowlisted)`);
   }
 }
 
@@ -167,4 +167,4 @@ if (problems.length) {
   for (const p of problems) console.error("  - " + p);
   process.exit(1);
 }
-console.log("validate-docs: OK (docs/usage.md matches the current ACE surface and property defaults)");
+console.log("validate-docs: OK (wiki/usage.md matches the current ACE surface and property defaults)");
