@@ -87,8 +87,10 @@ test in Construct 3).
 ## Branching
 
 - Base branch: `main`.
-- Branch naming: `BUR-<ticket>-<kebab-description>` (e.g. `BUR-4919-no-low-latency`).
-  Use `BUR-0000-...` when there is no associated ticket.
+- Branch naming: `BUR-<ticket>-<kebab-description>` (e.g. `BUR-4919-no-low-latency`)
+  for ticketed work. With no associated ticket, use `<type>-<kebab-description>`, where
+  `<type>` is the commit type (`feat`, `fix`, `chore`) — e.g. `chore-docs-to-wiki` —
+  instead of the older `BUR-0000-...` form.
 - Remote: GitHub (`GenvidTechnologies/c3addon-youtube-video-plugin`).
 
 ### Remotes (single `origin` — fork network detached)
